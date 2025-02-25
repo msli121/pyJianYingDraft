@@ -17,7 +17,7 @@ env_files = {
     'dev': '.env',
     'prod': '.env.prod',
 }
-load_dotenv(dotenv_path=os.path.join(BASE_DIR, env_files.get(env, '.env')))
+load_dotenv(dotenv_path=os.path.join(BASE_DIR, env_files.get(env, '..env')))
 
 
 def parse_boolean(value):

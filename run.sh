@@ -42,13 +42,13 @@ start_app() {
         exit 1
     fi
 
-    local env=$1
+    local .env=$1
 
     # 更新最新代码
     git pull
 
     # 指定环境类型，用于加载环境变量
-    export FLASK_ENV=${env}
+    export FLASK_ENV=${.env}
 
     # 使用Gunicorn启动（推荐配置）
     gunicorn --workers 4 \
@@ -60,7 +60,7 @@ start_app() {
              --error-logfile - \
              --log-level info \
              run:app
-    echo "应用后台运行成功... 环境为 ${env}。检查 'log/app.log' 了解详情。"
+    echo "应用后台运行成功... 环境为 ${.env}。检查 'log/app.log' 了解详情。"
 }
 
 # 函数来停止应用程序
@@ -90,7 +90,7 @@ ACTION=$1
 shift
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -env)
+        -.env)
             ENV=$2
             shift
             shift

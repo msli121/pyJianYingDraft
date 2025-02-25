@@ -6,9 +6,10 @@ from copy import deepcopy
 from typing import Optional, Literal, Union, overload
 from typing import Type, Dict, List, Any
 
-from . import util
+from . import util, Font_type
 from . import exceptions
-from .template_mode import Imported_track, Editable_track, Imported_media_track, Imported_text_track, Shrink_mode, Extend_mode, import_track
+from .template_mode import Imported_track, Editable_track, Imported_media_track, Imported_text_track, Shrink_mode, \
+    Extend_mode, import_track
 from .time_util import Timerange, tim, srt_tstamp
 from .local_materials import Video_material, Audio_material
 from .segment import Base_segment, Speed, Clip_settings
@@ -19,6 +20,7 @@ from .text_segment import Text_segment, Text_style
 from .track import Track_type, Base_track, Track
 
 from .metadata import Video_scene_effect_type, Video_character_effect_type, Filter_type
+
 
 class Script_material:
     """草稿文件中的素材信息部分"""
@@ -67,11 +69,16 @@ class Script_material:
         self.filters = []
 
     @overload
-    def __contains__(self, item: Union[Video_material, Audio_material]) -> bool: ...
+    def __contains__(self, item: Union[Video_material, Audio_material]) -> bool:
+        ...
+
     @overload
-    def __contains__(self, item: Union[Audio_fade, Audio_effect]) -> bool: ...
+    def __contains__(self, item: Union[Audio_fade, Audio_effect]) -> bool:
+        ...
+
     @overload
-    def __contains__(self, item: Union[Segment_animations, Video_effect, Transition, Filter]) -> bool: ...
+    def __contains__(self, item: Union[Segment_animations, Video_effect, Transition, Filter]) -> bool:
+        ...
 
     def __contains__(self, item) -> bool:
         if isinstance(item, Video_material):
@@ -151,6 +158,7 @@ class Script_material:
             "vocal_beautifys": [],
             "vocal_separations": []
         }
+
 
 class Script_file:
     """剪映草稿文件, 大部分接口定义在此"""
@@ -410,7 +418,8 @@ class Script_file:
     def import_srt(self, srt_path: str, track_name: str, *,
                    time_offset: Union[str, float] = 0.0,
                    text_style: Text_style = Text_style(size=5, align=1),
-                   clip_settings: Clip_settings = Clip_settings(transform_y=-0.8)) -> "Script_file":
+                   clip_settings: Clip_settings = Clip_settings(transform_y=-0.8),
+                   font: Optional[Font_type] = None) -> "Script_file":
         """从SRT文件中导入字幕
 
         Args:
@@ -419,6 +428,7 @@ class Script_file:
             time_offset (`Union[str, float]`, optional): 字幕整体时间偏移, 单位为微秒, 默认为0.
             text_style (`Text_style`, optional): 字幕样式, 默认模仿剪映导入字幕时的样式.
             clip_settings (`Clip_settings`, optional): 图像调节设置, 默认模仿剪映导入字幕时的设置.
+            font (`Font_type`, optional): 字体类型, 默认为系统字体
 
         Raises:
             `NameError`: 已存在同名轨道
@@ -442,7 +452,7 @@ class Script_file:
                     index += 1
                     continue
                 if not line.isdigit():
-                    raise ValueError("Expected a number at line %d, got '%s'" % (index+1, line))
+                    raise ValueError("Expected a number at line %d, got '%s'" % (index + 1, line))
                 index += 1
                 read_state = "timestamp"
             elif read_state == "timestamp":
@@ -456,7 +466,7 @@ class Script_file:
             elif read_state == "content":
                 # 内容结束, 生成片段
                 if len(line) == 0:
-                    seg = Text_segment(text, text_trange, style=text_style, clip_settings=clip_settings)
+                    seg = Text_segment(text, text_trange, style=text_style, clip_settings=clip_settings, font=font)
                     self.add_segment(seg, track_name)
 
                     text = ""
@@ -467,7 +477,7 @@ class Script_file:
 
         # 添加最后一个片段
         if len(text) > 0:
-            seg = Text_segment(text, text_trange, style=text_style, clip_settings=clip_settings)
+            seg = Text_segment(text, text_trange, style=text_style, clip_settings=clip_settings, font=font)
             self.add_segment(seg, track_name)
 
         return self
@@ -540,16 +550,19 @@ class Script_file:
         # 更新素材信息
         target_json_obj.update({name_key: material.material_name, "path": material.path, "duration": material.duration})
         if video_mode:
-            target_json_obj.update({"width": material.width, "height": material.height, "material_type": material.material_type})
+            target_json_obj.update(
+                {"width": material.width, "height": material.height, "material_type": material.material_type})
             if replace_crop:
                 target_json_obj.update({"crop": material.crop_settings.export_json()})
 
         return self
 
-    def replace_material_by_seg(self, track: Editable_track, segment_index: int, material: Union[Video_material, Audio_material],
+    def replace_material_by_seg(self, track: Editable_track, segment_index: int,
+                                material: Union[Video_material, Audio_material],
                                 source_timerange: Optional[Timerange] = None, *,
                                 handle_shrink: Shrink_mode = Shrink_mode.cut_tail,
-                                handle_extend: Union[Extend_mode, List[Extend_mode]] = Extend_mode.cut_material_tail) -> "Script_file":
+                                handle_extend: Union[
+                                    Extend_mode, List[Extend_mode]] = Extend_mode.cut_material_tail) -> "Script_file":
         """替换指定音视频轨道上指定片段的素材, 暂不支持变速片段的素材替换
 
         Args:
