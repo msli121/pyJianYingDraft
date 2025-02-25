@@ -1,5 +1,5 @@
 """
-@File: run_demo.py
+@File: auto_cut.py
 @Description: 视频脚本解析
 
 @Author: lms

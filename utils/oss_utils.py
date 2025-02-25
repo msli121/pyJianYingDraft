@@ -14,6 +14,7 @@ import datetime
 from hashlib import sha1
 
 import logging
+import app_config
 
 from utils.common_utils import is_image_url, is_video_url, compress_image
 
@@ -35,21 +36,13 @@ class OssOperationType(Enum):
     PUT = 'PUT'
 
 
-class OssConfig:
-    def __init__(self, endpoint, bucket_name, access_key_id, access_key_secret):
-        self.endpoint = endpoint
-        self.bucket_name = bucket_name
-        self.access_key_id = access_key_id
-        self.access_key_secret = access_key_secret
-
-
-def init_oss(target_config):
+def init_oss(access_key_id, access_key_secret, endpoint, bucket_name):
     # 初始化OSS配置
     global bucket, ACCESS_KEY_ID, ACCESS_KEY_SECRET
-    ACCESS_KEY_ID = target_config.access_key_id
-    ACCESS_KEY_SECRET = target_config.access_key_secret
-    auth = oss2.Auth(target_config.access_key_id, target_config.access_key_secret)
-    bucket = oss2.Bucket(auth, target_config.endpoint, target_config.bucket_name)
+    ACCESS_KEY_ID = access_key_id
+    ACCESS_KEY_SECRET = access_key_secret
+    auth = oss2.Auth(access_key_id, access_key_secret)
+    bucket = oss2.Bucket(auth, endpoint, bucket_name)
 
 
 def upload_local_file_to_oss(local_file_path, oss_file_path, need_compress=False, max_size_in_mb=5):
@@ -537,11 +530,10 @@ def check_file_exists_in_oss(oss_file_path):
         print(f"检查文件是否存在时出错：{e}")
         return False
 
-
-target_config = OssConfig()
-init_oss(target_config)
-
 if __name__ == '__main__':
+    config = app_config.AppConfig()
+    init_oss(access_key_id=config.ACCESS_KEY_ID, access_key_secret=config.ACCESS_KEY_SECRET,
+             endpoint=config.ENDPOINT, bucket_name=config.BUCKET_NAME)
     oss_url = "ai-try-on/raw/images/20240929/2Xw4EN02.jpg"
     # target_config = OssConfig()
     # init_oss(target_config)

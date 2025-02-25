@@ -3,3 +3,7 @@ imageio
 uiautomation>=2
 requests
 oss2
+python-dotenv
+colorlog
+flask
+gunicorn
