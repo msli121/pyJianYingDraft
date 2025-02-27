@@ -20,8 +20,8 @@ BGM_VOLUME_MAP = {
     'PederB.Helland-ANewDay.mp3': 0.5,
     'Pianoboy高至豪_The_truth_that_you_leave.mp3': 0.5,
     '北野夏海-AThousandYears钢琴.mp3': 0.6,
-    '残影_-_知我（钢琴版）.mp3': 0.6,
-    '赵海洋_-_夜空的寂静_(夜色钢琴曲).mp3': 0.6,
+    '残影_-_知我（钢琴版）.mp3': 0.4,
+    '赵海洋_-_夜空的寂静_(夜色钢琴曲).mp3': 0.5,
 }
 
 
@@ -112,7 +112,7 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
     # 字体颜色 暖色调的橙黄色
     text_style = draft.Text_style(color=(0.9, 0.9, 0.8), size=14, align=1, bold=True)
     # 文案相对中间区域的偏移
-    transform_y = -0.4
+    transform_y = -0.5
     ##################################################################
 
     # 创建剪映草稿
