@@ -18,7 +18,7 @@ from utils.oss_utils import check_file_exists_in_oss, download_file_from_oss, in
 
 BGM_VOLUME_MAP = {
     'PederB.Helland-ANewDay.mp3': 0.5,
-    'Pianoboy高至豪_The_truth_that_you_leave.mp3': 0.5,
+    'Pianoboy高至豪_The_truth_that_you_leave.mp3': 0.4,
     '北野夏海-AThousandYears钢琴.mp3': 0.6,
     '残影_-_知我（钢琴版）.mp3': 0.4,
     '赵海洋_-_夜空的寂静_(夜色钢琴曲).mp3': 0.5,
