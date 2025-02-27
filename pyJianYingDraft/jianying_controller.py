@@ -20,8 +20,8 @@ class Jianying_controller:
     def __init__(self):
         """初始化剪映控制器, 此时剪映应该处于目录页"""
         # self.get_window()
-        self.app = None
-        self.app_status = "home"
+        # self.app = None
+        # self.app_status = "home"
 
     def export_draft(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200) -> None:
         """导出指定的剪映草稿
