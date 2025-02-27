@@ -10,17 +10,19 @@ from flask import Blueprint, jsonify, request
 api_blueprint = Blueprint('api', __name__)
 
 
-@api_blueprint.route('/api/v1/status', methods=['GET'])
+@api_blueprint.route('/api/status', methods=['GET'])
 def check_status():
     """服务状态检查接口"""
-    return jsonify({
-        "status": "ok",
-        "version": "1.0.0"
-    })
+    res = {
+        "code": 0,
+        "msg": "success",
+        "data": None,
+    }
+    return jsonify(res)
 
 
-@api_blueprint.route('/echo', methods=['POST'])
-def echo_handler():
+@api_blueprint.route('/api/auto_cut', methods=['POST'])
+def jy_auto_cut():
     """数据回显接口"""
     data = request.get_json()
     return jsonify({

@@ -217,7 +217,10 @@ if __name__ == '__main__':
     logging.info("[剪映自动化剪辑] 完成")
     # 剪映自动导出视频
     logging.info("[剪映自动化导出视频] 开始进行...")
-    video_save_path = os.path.join("data", "成品视频", f"{house_no}_{get_current_datetime_str_()}.mp4")
+    # 获取当前项目路径
+    data_dir = os.path.join(app_config.BASE_DIR, "data")
+    video_save_path = os.path.join(data_dir, "成品视频", f"{house_no}_{get_current_datetime_str_()}.mp4")
+    video_save_path = os.path.abspath(video_save_path)
     os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
     jy_auto_export_video(jy_draft_name, video_save_path)
     logging.info("[剪映自动化导出视频] 完成")
