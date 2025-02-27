@@ -1,6 +1,5 @@
 """剪映自动化控制，主要与自动导出有关"""
 import threading
-import pythoncom
 import time
 import shutil
 import uiautomation as uia
@@ -9,6 +8,7 @@ from typing import Optional, Literal
 
 from . import exceptions
 from .exceptions import AutomationError
+
 
 class Jianying_controller:
     """剪映控制器"""
@@ -19,8 +19,9 @@ class Jianying_controller:
 
     def __init__(self):
         """初始化剪映控制器, 此时剪映应该处于目录页"""
-        self.get_window()
-        pythoncom.CoInitialize()  # 初始化 COM 库
+        # self.get_window()
+        self.app = None
+        self.app_status = "home"
 
     def export_draft(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200) -> None:
         """导出指定的剪映草稿
@@ -37,7 +38,6 @@ class Jianying_controller:
             `AutomationError`: 剪映操作失败
         """
         print(f"开始导出 {draft_name} 至 {output_dir}")
-        pythoncom.CoInitialize()  # 初始化 COM 库
         try:
             with uia.UIAutomationInitializerInThread(debug=True):
                 self.get_window()
@@ -45,7 +45,8 @@ class Jianying_controller:
 
                 # 点击对应草稿
                 draft_name_text = self.app.TextControl(searchDepth=2,
-                                                       Compare=lambda ctrl, depth: self.__draft_name_cmp(draft_name, ctrl, depth))
+                                                       Compare=lambda ctrl, depth: self.__draft_name_cmp(draft_name,
+                                                                                                         ctrl, depth))
                 if not draft_name_text.Exists(0):
                     raise exceptions.DraftNotFound(f"未找到名为{draft_name}的剪映草稿")
                 draft_btn = draft_name_text.GetParentControl()
@@ -104,8 +105,9 @@ class Jianying_controller:
                     shutil.move(export_path, output_dir)
 
                 print(f"导出 {draft_name} 至 {output_dir} 完成")
-        finally:
-            pythoncom.CoUninitialize()  # 最后
+        except Exception as e:
+            # 异常处理
+            raise AutomationError(f"导出失败: {str(e)}")
 
     def export_draft_in_thread(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200):
         """在新线程中导出指定的剪映草稿"""
@@ -126,8 +128,8 @@ class Jianying_controller:
 
     def get_window(self) -> None:
         """寻找剪映窗口并置顶"""
-        if hasattr(self, "app") and self.app.Exists(0):
-            self.app.SetTopmost(False)
+        # if hasattr(self, "app") and self.app.Exists(0):
+        #     self.app.SetTopmost(False)
 
         self.app = uia.WindowControl(searchDepth=1, Compare=self.__jianying_window_cmp)
         if not self.app.Exists(0):

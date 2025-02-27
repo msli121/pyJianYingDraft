@@ -199,6 +199,7 @@ def jy_auto_export_video(jy_draft_name, video_save_path):
     thread = ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
     thread.join()
 
+
 # 剪映自动一步到位，下载素材+剪辑+导出+上传OSS
 def jy_auto_cut_and_export_one_step(house_no, video_script_oss_path):
     jy_draft_name = "自动化剪辑"
