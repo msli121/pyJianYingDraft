@@ -5,13 +5,11 @@
 @Author: lms
 @Date: 2025/2/25 11:20
 """
-
 from flask import Blueprint, jsonify, request, current_app
 
 from app.auto_cut import jy_auto_cut_and_export_one_step
 
 api_blueprint = Blueprint('api', __name__)
-log = current_app.logger
 
 
 @api_blueprint.route('/api/status', methods=['GET'])
@@ -28,6 +26,7 @@ def check_status():
 @api_blueprint.route('/api/auto_cut', methods=['POST'])
 def jy_auto_cut():
     """剪映自动裁剪"""
+    log = current_app.logger
     try:
         data = request.get_json(silent=True) or {}
         log.info("[剪映自动裁剪] request data: %s", data)
