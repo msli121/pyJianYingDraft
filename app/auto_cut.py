@@ -5,16 +5,23 @@
 @Author: lms
 @Date: 2025/2/24 19:30
 """
-import glob
 import json
 import logging
 import os
-import random
 
 import app_config
 import pyJianYingDraft as draft
 from pyJianYingDraft import trange, Clip_settings
+from utils.common_utils import get_current_datetime_str_
 from utils.oss_utils import check_file_exists_in_oss, download_file_from_oss, init_oss
+
+BGM_VOLUME_MAP = {
+    'PederB.Helland-ANewDay.mp3': 0.5,
+    'Pianoboy高至豪_The_truth_that_you_leave.mp3': 0.5,
+    '北野夏海-AThousandYears钢琴.mp3': 0.6,
+    '残影_-_知我（钢琴版）.mp3': 0.6,
+    '赵海洋_-_夜空的寂静_(夜色钢琴曲).mp3': 0.6,
+}
 
 
 # 下载视频脚本和素材
@@ -40,7 +47,15 @@ def download_video_script_and_material(house_no, video_script_oss_path):
     with open(script_local_path, 'r', encoding='utf-8') as f:
         video_script_data = json.load(f)
     # 下载背景音乐
-    music_oss_path = video_script_data.get('music_oss_path')
+    music_oss_path = video_script_data.get('bgm_oss_path')
+    if music_oss_path and check_file_exists_in_oss(music_oss_path):
+        basename = os.path.basename(music_oss_path)
+        music_local_path = os.path.abspath(os.path.join(data_dir, 'bgm', basename))
+        os.makedirs(os.path.dirname(music_local_path), exist_ok=True)
+        if not os.path.exists(music_local_path):
+            download_file_from_oss(oss_file_path=music_oss_path, local_file_path=music_local_path)
+        logging.info(f"背景音乐文件已下载到本地：{music_local_path}")
+        video_script_data['bgm_local_path'] = music_local_path
     clips = video_script_data.get('clips', [])
     for clip in clips:
         clip_video_oss_path = clip.get('clip_video_oss_path')
@@ -156,19 +171,17 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
         time_offset += clip_duration
 
     # 背景音乐轨道
-    bgm_files = glob.glob(
-        os.path.join(app_config.BASE_DIR, 'data', '背景音乐', '北野夏海-AThousandYears钢琴.mp3'))
-    if len(bgm_files) > 0:
+    bgm_local_path = video_script_data.get('bgm_local_path')
+    if bgm_local_path and os.path.exists(bgm_local_path):
         # 添加背音乐音频轨道
         bgm_track_name = 'bgm'
+        bgm_basename = os.path.basename(bgm_local_path)
         script.add_track(track_type=draft.Track_type.audio, track_name=bgm_track_name)
-        # 随机选一首背景音乐
-        bgm_file = random.choice(bgm_files)
-        bgm_material = draft.Audio_material(bgm_file)
-        # 草稿中添加音频素材
+        bgm_material = draft.Audio_material(bgm_local_path)
         script.add_material(bgm_material)
         # 添加背景音乐片段
-        bgm_segment = draft.Audio_segment(bgm_material, trange("0s", script.duration), volume=0.6)
+        bgm_segment = draft.Audio_segment(bgm_material, trange("0s", script.duration),
+                                          volume=BGM_VOLUME_MAP.get(bgm_basename, 0.6))
         # 增加一个1s的淡入和淡出
         bgm_segment.add_fade("1s", "1s")
         # 添加背景音乐到音频轨道
@@ -178,6 +191,13 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
     script.dump(os.path.join(jy_draft_dir, 'draft_content.json'))
 
 
+# 自动导出视频
+def jy_auto_export_video(jy_draft_name, video_save_path):
+    # 此前需要将剪映打开，并位于目录页
+    ctrl = draft.Jianying_controller()
+    ctrl.export_draft(jy_draft_name, video_save_path)
+
+
 if __name__ == '__main__':
     # 初始化OSS配置
     config = app_config.AppConfig()
@@ -185,7 +205,8 @@ if __name__ == '__main__':
              endpoint=config.ENDPOINT, bucket_name=config.BUCKET_NAME)
     house_no = 'TWZ2025021301115'
     video_script_oss_path = "video-mix/demo/TWZ2025021301115/分镜素材/素材_2025-02-26_19-52-43/video_script.json"
-    jy_draft_dir = "D:\\Documents\\JianYingData\\JianyingPro Drafts\\自动化剪辑"
+    jy_draft_name = "自动化剪辑"
+    jy_draft_dir = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", jy_draft_name)
     # 下载视频脚本和素材
     logging.info("[下载视频脚本和素材] 开始进行...")
     script_local_path = download_video_script_and_material(house_no, video_script_oss_path)
@@ -194,3 +215,9 @@ if __name__ == '__main__':
     logging.info("[剪映自动化剪辑] 开始进行...")
     jy_auto_cut(script_local_path, jy_draft_dir)
     logging.info("[剪映自动化剪辑] 完成")
+    # 剪映自动导出视频
+    logging.info("[剪映自动化导出视频] 开始进行...")
+    video_save_path = os.path.join("data", "成品视频", f"{house_no}_{get_current_datetime_str_()}.mp4")
+    os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
+    jy_auto_export_video(jy_draft_name, video_save_path)
+    logging.info("[剪映自动化导出视频] 完成")

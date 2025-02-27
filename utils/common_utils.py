@@ -67,6 +67,11 @@ def get_current_datetime_str():
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+# 获取当前日期时间字符串，格式为YYYY-MM-DD HH_MM_SS
+def get_current_datetime_str_():
+    return datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
+
+
 # 随机生成指定长度的字符串，并添加日期前缀
 def generate_random_string_with_day_prefix(length=6):
     # 当前日期对应的字符串

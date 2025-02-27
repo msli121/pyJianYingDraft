@@ -46,7 +46,7 @@ class Jianying_controller:
         draft_btn = draft_name_text.GetParentControl()
         assert draft_btn is not None
         draft_btn.Click(simulateMove=False)
-        time.sleep(10)
+        time.sleep(5)
         self.get_window()
 
         # 点击导出按钮
@@ -54,7 +54,7 @@ class Jianying_controller:
         if not export_btn.Exists(0):
             raise AutomationError("未找到导出按钮")
         export_btn.Click(simulateMove=False)
-        time.sleep(10)
+        time.sleep(5)
         self.get_window()
 
         # 获取原始导出路径
