@@ -12,7 +12,7 @@ from app.auto_cut import jy_auto_cut_and_export_one_step
 api_blueprint = Blueprint('api', __name__)
 
 
-@api_blueprint.route('/api/status', methods=['GET'])
+@api_blueprint.route('/api/ai-clip/status', methods=['GET'])
 def check_status():
     """服务状态检查接口"""
     res = {
@@ -23,7 +23,7 @@ def check_status():
     return jsonify(res), 200
 
 
-@api_blueprint.route('/api/auto_cut', methods=['POST'])
+@api_blueprint.route('/api/ai-clip/clip-house-video', methods=['POST'])
 def jy_auto_cut():
     """剪映自动裁剪"""
     log = current_app.logger
