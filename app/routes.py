@@ -5,12 +5,10 @@
 @Author: lms
 @Date: 2025/2/25 11:20
 """
-import os
 
 from flask import Blueprint, jsonify, request, current_app
 
-import app_config
-from app.auto_cut import download_video_script_and_material, jy_auto_cut_and_export_one_step
+from app.auto_cut import jy_auto_cut_and_export_one_step
 
 api_blueprint = Blueprint('api', __name__)
 log = current_app.logger
