@@ -1,5 +1,6 @@
 """剪映自动化控制，主要与自动导出有关"""
 import threading
+import pythoncom
 import time
 import shutil
 import uiautomation as uia
@@ -19,6 +20,7 @@ class Jianying_controller:
     def __init__(self):
         """初始化剪映控制器, 此时剪映应该处于目录页"""
         self.get_window()
+        pythoncom.CoInitialize()  # 初始化 COM 库
 
     def export_draft(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200) -> None:
         """导出指定的剪映草稿
@@ -35,71 +37,75 @@ class Jianying_controller:
             `AutomationError`: 剪映操作失败
         """
         print(f"开始导出 {draft_name} 至 {output_dir}")
-        with uia.UIAutomationInitializerInThread(debug=True):
-            self.get_window()
-            self.switch_to_home()
-
-            # 点击对应草稿
-            draft_name_text = self.app.TextControl(searchDepth=2,
-                                                   Compare=lambda ctrl, depth: self.__draft_name_cmp(draft_name, ctrl, depth))
-            if not draft_name_text.Exists(0):
-                raise exceptions.DraftNotFound(f"未找到名为{draft_name}的剪映草稿")
-            draft_btn = draft_name_text.GetParentControl()
-            assert draft_btn is not None
-            draft_btn.Click(simulateMove=False)
-            time.sleep(5)
-            self.get_window()
-
-            # 点击导出按钮
-            export_btn = self.app.TextControl(searchDepth=2, Compare=self.__edit_page_export_cmp)
-            if not export_btn.Exists(0):
-                raise AutomationError("未找到导出按钮")
-            export_btn.Click(simulateMove=False)
-            time.sleep(5)
-            self.get_window()
-
-            # 获取原始导出路径
-            export_path_sib = self.app.TextControl(searchDepth=2, Compare=self.__export_path_cmp)
-            if not export_path_sib.Exists(0):
-                raise AutomationError("未找到导出路径框")
-            export_path_text = export_path_sib.GetSiblingControl(lambda ctrl: True)
-            assert export_path_text is not None
-            export_path = export_path_text.GetPropertyValue(30159)
-
-            # 点击导出
-            export_btn = self.app.TextControl(searchDepth=2, Compare=self.__export_btn_cmp)
-            if not export_btn.Exists(0):
-                raise AutomationError("未找到导出按钮")
-            export_btn.Click(simulateMove=False)
-            time.sleep(5)
-
-            # 等待导出完成
-            st = time.time()
-            while True:
+        pythoncom.CoInitialize()  # 初始化 COM 库
+        try:
+            with uia.UIAutomationInitializerInThread(debug=True):
                 self.get_window()
-                if self.app_status != "pre_export": continue
+                self.switch_to_home()
 
-                succeed_close_btn = self.app.TextControl(searchDepth=2, Compare=self.__export_succeed_close_btn_cmp)
-                if succeed_close_btn.Exists(0):
-                    succeed_close_btn.Click(simulateMove=False)
-                    break
+                # 点击对应草稿
+                draft_name_text = self.app.TextControl(searchDepth=2,
+                                                       Compare=lambda ctrl, depth: self.__draft_name_cmp(draft_name, ctrl, depth))
+                if not draft_name_text.Exists(0):
+                    raise exceptions.DraftNotFound(f"未找到名为{draft_name}的剪映草稿")
+                draft_btn = draft_name_text.GetParentControl()
+                assert draft_btn is not None
+                draft_btn.Click(simulateMove=False)
+                time.sleep(5)
+                self.get_window()
 
-                if time.time() - st > timeout:
-                    raise AutomationError("导出超时, 时限为%d秒" % timeout)
+                # 点击导出按钮
+                export_btn = self.app.TextControl(searchDepth=2, Compare=self.__edit_page_export_cmp)
+                if not export_btn.Exists(0):
+                    raise AutomationError("未找到导出按钮")
+                export_btn.Click(simulateMove=False)
+                time.sleep(5)
+                self.get_window()
 
-                time.sleep(1)
-            time.sleep(2)
+                # 获取原始导出路径
+                export_path_sib = self.app.TextControl(searchDepth=2, Compare=self.__export_path_cmp)
+                if not export_path_sib.Exists(0):
+                    raise AutomationError("未找到导出路径框")
+                export_path_text = export_path_sib.GetSiblingControl(lambda ctrl: True)
+                assert export_path_text is not None
+                export_path = export_path_text.GetPropertyValue(30159)
 
-            # 回到目录页
-            self.get_window()
-            self.switch_to_home()
-            time.sleep(2)
+                # 点击导出
+                export_btn = self.app.TextControl(searchDepth=2, Compare=self.__export_btn_cmp)
+                if not export_btn.Exists(0):
+                    raise AutomationError("未找到导出按钮")
+                export_btn.Click(simulateMove=False)
+                time.sleep(5)
 
-            # 复制导出的文件到指定目录
-            if output_dir is not None:
-                shutil.move(export_path, output_dir)
+                # 等待导出完成
+                st = time.time()
+                while True:
+                    self.get_window()
+                    if self.app_status != "pre_export": continue
 
-            print(f"导出 {draft_name} 至 {output_dir} 完成")
+                    succeed_close_btn = self.app.TextControl(searchDepth=2, Compare=self.__export_succeed_close_btn_cmp)
+                    if succeed_close_btn.Exists(0):
+                        succeed_close_btn.Click(simulateMove=False)
+                        break
+
+                    if time.time() - st > timeout:
+                        raise AutomationError("导出超时, 时限为%d秒" % timeout)
+
+                    time.sleep(1)
+                time.sleep(2)
+
+                # 回到目录页
+                self.get_window()
+                self.switch_to_home()
+                time.sleep(2)
+
+                # 复制导出的文件到指定目录
+                if output_dir is not None:
+                    shutil.move(export_path, output_dir)
+
+                print(f"导出 {draft_name} 至 {output_dir} 完成")
+        finally:
+            pythoncom.CoUninitialize()  # 最后
 
     def export_draft_in_thread(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200):
         """在新线程中导出指定的剪映草稿"""
