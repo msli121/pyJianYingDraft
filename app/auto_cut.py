@@ -196,8 +196,8 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
 def jy_auto_export_video(jy_draft_name, video_save_path):
     # 此前需要将剪映打开，并位于目录页
     ctrl = draft.Jianying_controller()
-    ctrl.export_draft(jy_draft_name, video_save_path)
-
+    thread = ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
+    thread.join()
 
 # 剪映自动一步到位，下载素材+剪辑+导出+上传OSS
 def jy_auto_cut_and_export_one_step(house_no, video_script_oss_path):
@@ -213,11 +213,9 @@ def jy_auto_cut_and_export_one_step(house_no, video_script_oss_path):
     logging.info("[剪映自动化剪辑] 完成")
     # 剪映自动导出视频
     logging.info("[剪映自动化导出视频] 开始进行...")
-    # 获取当前项目路径
     data_dir = os.path.join(app_config.BASE_DIR, "data")
     file_name = f"{house_no}_{get_current_datetime_str_()}.mp4"
-    video_save_path = os.path.join(data_dir, "成品视频", file_name)
-    video_save_path = os.path.abspath(video_save_path)
+    video_save_path = os.path.abspath(os.path.join(data_dir, "成品视频", file_name))
     os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
     jy_auto_export_video(jy_draft_name, video_save_path)
     logging.info(f"[剪映自动化导出视频] 完成 视频地址={video_save_path}")
@@ -240,7 +238,16 @@ if __name__ == '__main__':
              endpoint=config.ENDPOINT, bucket_name=config.BUCKET_NAME)
     house_no = 'TWZ2025021301115'
     video_script_oss_path = "video-mix/demo/TWZ2025021301115/分镜素材/素材_2025-02-26_19-52-43/video_script.json"
-    # 剪映自动化剪辑+导出
-    oss_url, video_save_path = jy_auto_cut_and_export_one_step(house_no, video_script_oss_path)
-    logging.info(oss_url)
-    logging.info(video_save_path)
+    # # 剪映自动化剪辑+导出
+    # oss_url, video_save_path = jy_auto_cut_and_export_one_step(house_no, video_script_oss_path)
+    # logging.info(oss_url)
+    # logging.info(video_save_path)
+
+    logging.info("[剪映自动化导出视频] 开始进行...")
+    data_dir = os.path.join(app_config.BASE_DIR, "data")
+    file_name = f"{house_no}_{get_current_datetime_str_()}.mp4"
+    video_save_path = os.path.abspath(os.path.join(data_dir, "成品视频", file_name))
+    os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
+    jy_draft_name = "自动化剪辑"
+    jy_auto_export_video(jy_draft_name, video_save_path)
+    logging.info(f"[剪映自动化导出视频] 完成 视频地址={video_save_path}")
