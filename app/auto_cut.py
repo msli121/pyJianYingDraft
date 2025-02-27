@@ -115,7 +115,6 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
     time_offset = 0
     for index, clip in enumerate(clips):
         clip_duration = 0
-        clip_video_local_path = clip.get('clip_video_local_path')
         # 处理音频素材
         wav_local_path = clip.get('wav_local_path')
         if os.path.exists(wav_local_path):
@@ -132,18 +131,19 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
             # 添加音频片段到音频轨道
             script.add_segment(audio_segment, track_name=audio_track_name)
             # 本次片段时间
-            clip_duration = max(wav_material.duration, clip_duration)
+            clip_duration = wav_material.duration
         # 处理视频素材
+        clip_video_local_path = clip.get('clip_video_local_path')
         if os.path.exists(clip_video_local_path):
             video_material = draft.Video_material(clip_video_local_path)
             # 草稿中添加视频素材
             script.add_material(video_material)
-            if video_material.duration > (clip_duration + 0.5 * 1000 * 1000):
-                clip_duration = clip_duration + 0.5 * 1000 * 1000
-            elif video_material.duration < clip_duration:
+            # 没有音频文件，视频时长等于本次片段时长
+            if clip_duration == 0:
                 clip_duration = video_material.duration
             # 添加视频片段
-            video_segment = draft.Video_segment(video_material, trange(time_offset, clip_duration))
+            video_segment = draft.Video_segment(video_material, trange(time_offset, clip_duration),
+                                                source_timerange=trange(0, video_material.duration))
             # 添加视频片段到视频轨道
             script.add_segment(video_segment, track_name=video_track_name)
         # 处理字幕素材
