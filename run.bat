@@ -8,17 +8,18 @@ set "DEFAULT_ENV=prod"
 set "PORT=7788"
 set "PYTHON_SCRIPT=run.py"        REM 要运行的 Python 脚本
 
-
 REM 主入口
-call :main %*
-exit /b %errorlevel%
-
-:main
 if "%1"=="" (
-    echo Usage: %~n0 {start^|stop^|restart^|status} [-env environment] [-auto_task 0^|1]
-    exit /b 1
+    set "ACTION=restart"
+    REM 这里可以根据需要设置默认的 -env 参数
+    set "ENV=%DEFAULT_ENV%"
+    goto :parse_args
+) else (
+    call :main %*
+    exit /b %errorlevel%
 )
 
+:main
 set "ACTION=%1"
 shift
 
