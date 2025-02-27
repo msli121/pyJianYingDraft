@@ -13,7 +13,8 @@ import app_config
 import pyJianYingDraft as draft
 from pyJianYingDraft import trange, Clip_settings
 from utils.common_utils import get_current_datetime_str_
-from utils.oss_utils import check_file_exists_in_oss, download_file_from_oss, init_oss
+from utils.oss_utils import check_file_exists_in_oss, download_file_from_oss, init_oss, upload_local_file_to_oss, \
+    generate_get_url
 
 BGM_VOLUME_MAP = {
     'PederB.Helland-ANewDay.mp3': 0.5,
@@ -198,13 +199,8 @@ def jy_auto_export_video(jy_draft_name, video_save_path):
     ctrl.export_draft(jy_draft_name, video_save_path)
 
 
-if __name__ == '__main__':
-    # 初始化OSS配置
-    config = app_config.AppConfig()
-    init_oss(access_key_id=config.ACCESS_KEY_ID, access_key_secret=config.ACCESS_KEY_SECRET,
-             endpoint=config.ENDPOINT, bucket_name=config.BUCKET_NAME)
-    house_no = 'TWZ2025021301115'
-    video_script_oss_path = "video-mix/demo/TWZ2025021301115/分镜素材/素材_2025-02-26_19-52-43/video_script.json"
+# 剪映自动一步到位，下载素材+剪辑+导出+上传OSS
+def jy_auto_cut_and_export_one_step(house_no, video_script_oss_path):
     jy_draft_name = "自动化剪辑"
     jy_draft_dir = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", jy_draft_name)
     # 下载视频脚本和素材
@@ -219,8 +215,31 @@ if __name__ == '__main__':
     logging.info("[剪映自动化导出视频] 开始进行...")
     # 获取当前项目路径
     data_dir = os.path.join(app_config.BASE_DIR, "data")
-    video_save_path = os.path.join(data_dir, "成品视频", f"{house_no}_{get_current_datetime_str_()}.mp4")
+    file_name = f"{house_no}_{get_current_datetime_str_()}.mp4"
+    video_save_path = os.path.join(data_dir, "成品视频", file_name)
     video_save_path = os.path.abspath(video_save_path)
     os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
     jy_auto_export_video(jy_draft_name, video_save_path)
-    logging.info("[剪映自动化导出视频] 完成")
+    logging.info(f"[剪映自动化导出视频] 完成 视频地址={video_save_path}")
+    # 视频上传OSS
+    index = video_script_oss_path.index(house_no)
+    oss_path = f"{video_script_oss_path[:index]}成品视频/{file_name}"
+    logging.info(f"[视频上传OSS] {video_save_path} -> {oss_path}")
+    upload_local_file_to_oss(local_file_path=video_save_path, oss_file_path=oss_path)
+    logging.info("[视频上传OSS] 完成")
+    # 拼接OSS地址
+    oss_url = generate_get_url(oss_path)
+    return oss_url, video_save_path
+
+
+if __name__ == '__main__':
+    # 初始化OSS配置
+    config = app_config.AppConfig()
+    init_oss(access_key_id=config.ACCESS_KEY_ID, access_key_secret=config.ACCESS_KEY_SECRET,
+             endpoint=config.ENDPOINT, bucket_name=config.BUCKET_NAME)
+    house_no = 'TWZ2025021301115'
+    video_script_oss_path = "video-mix/demo/TWZ2025021301115/分镜素材/素材_2025-02-26_19-52-43/video_script.json"
+    # 剪映自动化剪辑+导出
+    oss_url, video_save_path = jy_auto_cut_and_export_one_step(house_no, video_script_oss_path)
+    logging.info(oss_url)
+    logging.info(video_save_path)
