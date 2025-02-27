@@ -32,7 +32,7 @@ def jy_auto_cut():
     log.info("[剪映自动裁剪] request data: %s", data)
     house_no = data.get("house_no")
     video_script_oss_path = data.get("video_script_oss_path")
-    notify_url = data.get("notify_url", True)
+    notify_url = data.get("notify_url")
     staff_id = data.get("staff_id")
     nickname = data.get("nickname")
     try:
