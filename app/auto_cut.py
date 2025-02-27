@@ -18,17 +18,18 @@ from utils.oss_utils import check_file_exists_in_oss, download_file_from_oss, in
 
 
 # 下载视频脚本和素材
-def download_video_script_and_material(video_script_oss_path):
+def download_video_script_and_material(house_no, video_script_oss_path):
+    if house_no is None or len(house_no) == 0:
+        raise Exception("house_no不能为空")
     if not check_file_exists_in_oss(video_script_oss_path):
         raise Exception("OSS上视频脚本文件不存在")
-    if not 'TWS' in video_script_oss_path:
-        raise Exception("视频脚本文件格式不正确")
+    if not house_no in video_script_oss_path:
+        raise Exception(f"视频脚本文件格式不正确 {video_script_oss_path}")
     # 获取当前项目路径
-    # work_dir = os.path.join(os.getcwd())
     data_dir = os.path.join(app_config.BASE_DIR, "data")
     os.makedirs(data_dir, exist_ok=True)
-    # 查找TWS在video_script_oss_path中位置
-    index = video_script_oss_path.index('TWS')
+    # 查找房源编号在video_script_oss_path中位置
+    index = video_script_oss_path.index(house_no)
     script_local_path = os.path.abspath(os.path.join(data_dir, video_script_oss_path[index:]))
     os.makedirs(os.path.dirname(script_local_path), exist_ok=True)
     # 从OSS下载脚本文件
@@ -38,11 +39,13 @@ def download_video_script_and_material(video_script_oss_path):
     # 读取文件内容
     with open(script_local_path, 'r', encoding='utf-8') as f:
         video_script_data = json.load(f)
+    # 下载背景音乐
+    music_oss_path = video_script_data.get('music_oss_path')
     clips = video_script_data.get('clips', [])
     for clip in clips:
         clip_video_oss_path = clip.get('clip_video_oss_path')
         if clip_video_oss_path and check_file_exists_in_oss(clip_video_oss_path):
-            index = video_script_oss_path.index('TWS')
+            index = video_script_oss_path.index(house_no)
             clip_video_local_path = os.path.abspath(os.path.join(data_dir, clip_video_oss_path[index:]))
             if not os.path.exists(clip_video_local_path):
                 download_file_from_oss(oss_file_path=clip_video_oss_path, local_file_path=clip_video_local_path)
@@ -52,7 +55,7 @@ def download_video_script_and_material(video_script_oss_path):
             clip['clip_video_local_path'] = clip_video_local_path
         srt_oss_path = clip.get('srt_oss_path')
         if srt_oss_path and check_file_exists_in_oss(srt_oss_path):
-            index = video_script_oss_path.index('TWS')
+            index = video_script_oss_path.index(house_no)
             srt_local_path = os.path.abspath(os.path.join(data_dir, srt_oss_path[index:]))
             if not os.path.exists(srt_local_path):
                 download_file_from_oss(oss_file_path=srt_oss_path, local_file_path=srt_local_path)
@@ -62,7 +65,7 @@ def download_video_script_and_material(video_script_oss_path):
             clip['srt_local_path'] = srt_local_path
         wav_oss_path = clip.get('wav_oss_path')
         if wav_oss_path and check_file_exists_in_oss(wav_oss_path):
-            index = video_script_oss_path.index('TWS')
+            index = video_script_oss_path.index(house_no)
             wav_local_path = os.path.abspath(os.path.join(data_dir, wav_oss_path[index:]))
             if not os.path.exists(wav_local_path):
                 download_file_from_oss(oss_file_path=wav_oss_path, local_file_path=wav_local_path)
@@ -135,8 +138,10 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
             video_material = draft.Video_material(clip_video_local_path)
             # 草稿中添加视频素材
             script.add_material(video_material)
-            if video_material.duration > (clip_duration + 0.5*1000*1000):
-                clip_duration = clip_duration + 0.5*1000*1000
+            if video_material.duration > (clip_duration + 0.5 * 1000 * 1000):
+                clip_duration = clip_duration + 0.5 * 1000 * 1000
+            elif video_material.duration < clip_duration:
+                clip_duration = video_material.duration
             # 添加视频片段
             video_segment = draft.Video_segment(video_material, trange(time_offset, clip_duration))
             # 添加视频片段到视频轨道
@@ -178,11 +183,12 @@ if __name__ == '__main__':
     config = app_config.AppConfig()
     init_oss(access_key_id=config.ACCESS_KEY_ID, access_key_secret=config.ACCESS_KEY_SECRET,
              endpoint=config.ENDPOINT, bucket_name=config.BUCKET_NAME)
-    video_script_oss_path = "video-mix/demo/TWS2024111400142/分镜素材/素材_2025-02-25_19-09-35/video_script.json"
+    house_no = 'TWZ2025021301115'
+    video_script_oss_path = "video-mix/demo/TWZ2025021301115/分镜素材/素材_2025-02-26_19-52-43/video_script.json"
     jy_draft_dir = "D:\\Documents\\JianYingData\\JianyingPro Drafts\\自动化剪辑"
     # 下载视频脚本和素材
     logging.info("[下载视频脚本和素材] 开始进行...")
-    script_local_path = download_video_script_and_material(video_script_oss_path)
+    script_local_path = download_video_script_and_material(house_no, video_script_oss_path)
     logging.info("[下载视频脚本和素材] 完成")
     # 剪映自动剪辑
     logging.info("[剪映自动化剪辑] 开始进行...")
