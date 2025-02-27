@@ -229,6 +229,7 @@ def jy_auto_cut_and_export_one_step(house_no, video_script_oss_path):
     logging.info("[视频上传OSS] 完成")
     # 拼接OSS地址
     oss_url = generate_get_url(oss_path)
+    logging.info(f"oss_url={oss_url}")
     return oss_url, video_save_path
 
 
