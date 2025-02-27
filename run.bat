@@ -1,10 +1,13 @@
 @echo off
-setlocal enabledelayedexpansion
+REM 强制命令行使用 UTF-8 编码
+chcp 65001
 
 REM 定义变量
 set "CONDA_ENV_NAME=jianying"
 set "DEFAULT_ENV=prod"
 set "PORT=7788"
+set "PYTHON_SCRIPT=run.py"        REM 要运行的 Python 脚本
+
 
 REM 主入口
 call :main %*
@@ -24,12 +27,6 @@ REM 解析参数
 if "%1"=="" goto args_done
 if "%1"=="-env" (
     set "ENV=%2"
-    shift
-    shift
-    goto parse_args
-)
-if "%1"=="-auto_task" (
-    set "AUTO_TASK=%2"
     shift
     shift
     goto parse_args
@@ -76,8 +73,13 @@ if %errorlevel% neq 0 (
 )
 echo Conda environment "%CONDA_ENV_NAME%" activated.
 
-pip install -r requirements.txt
-echo Dependencies installed
+pip install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+if %errorlevel% neq 0 (
+    echo 安装依赖失败
+    pause
+    exit /b 1
+)
+echo 依赖已安装
 exit /b 0
 
 REM 启动应用程序
@@ -88,15 +90,7 @@ git pull
 set "FLASK_ENV=%~1"
 
 echo Starting application on port %PORT%...
-gunicorn --workers 4 ^
-         --bind 0.0.0.0:%PORT% ^
-         --timeout 600 ^
-         --preload ^
-         --daemon ^
-         --access-logfile - ^
-         --error-logfile - ^
-         --log-level info ^
-         run:app
+python %PYTHON_SCRIPT%
 echo Application started in %FLASK_ENV% environment
 exit /b 0
 
