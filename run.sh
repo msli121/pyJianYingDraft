@@ -42,7 +42,7 @@ start_app() {
         exit 1
     fi
 
-    local .env=$1
+    local env=$1
 
     # 更新最新代码
     git pull

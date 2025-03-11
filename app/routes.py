@@ -40,12 +40,12 @@ def jy_auto_cut():
             raise ValueError("缺少房源编号")
         if not video_script_oss_path:
             raise ValueError("缺少视频脚本OSS路径")
-        video_url, local_path = jy_auto_cut_and_export_one_step(house_no, video_script_oss_path)
+        oss_url, local_path = jy_auto_cut_and_export_one_step(house_no, video_script_oss_path)
         res = {
             "code": 0,
             "msg": "success",
             "data": {
-                "video_url": video_url,
+                "oss_url": oss_url,
                 "local_path": local_path,
             }
         }
