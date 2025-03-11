@@ -30,6 +30,7 @@ def jy_auto_cut():
     log = current_app.logger
     data = request.get_json(silent=True) or {}
     log.info("[剪映自动裁剪] request data: %s", data)
+    task_id = data.get('task_id')
     house_no = data.get("house_no")
     video_script_oss_path = data.get("video_script_oss_path")
     notify_url = data.get("notify_url")
@@ -50,12 +51,23 @@ def jy_auto_cut():
             }
         }
         if notify_url:
-            message = f"AI智能剪辑成功！\nstaff_id:{staff_id}\n昵称:{nickname}\n房源编号: {house_no}\n视频脚本OSS路径: {video_script_oss_path}\n视频URL: {video_url}"
+            message = (f"AI智能剪辑成功！\n"
+                       f"任务ID:{task_id}\n"
+                       f"房源编号: {house_no}\n"
+                       f"员工号:{staff_id}\n"
+                       f"昵称:{nickname}\n"
+                       f"视频URL: {video_url}")
             send_qywx_message(message, url=notify_url)
         return jsonify(res), 200
     except Exception as e:
         log.error("[剪映自动裁剪] Error: %s", str(e))
         if notify_url:
-            message = f"AI智能剪辑失败！\nstaff_id:{staff_id}\n昵称:{nickname}\n房源编号: {house_no}\n错误信息：{str(e)}\n视频脚本OSS路径: {video_script_oss_path}"
+            message = (f"AI智能剪辑失败！\n"
+                       f"任务ID:{task_id}\n"
+                       f"房源编号: {house_no}\n"
+                       f"员工号:{staff_id}\n"
+                       f"昵称:{nickname}\n"
+                       f"错误信息：{str(e)}\n"
+                       f"视频脚本OSS路径: {video_script_oss_path}")
             send_qywx_message(message, url=notify_url)
         return jsonify({"code": 1, "msg": str(e), "data": None}), 200

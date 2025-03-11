@@ -222,7 +222,7 @@ def jy_auto_cut_and_export_one_step(house_no, video_script_oss_path):
     logging.info(f"[剪映自动化导出视频] 完成 视频地址={video_save_path}")
     # 视频上传OSS
     index = video_script_oss_path.index(house_no)
-    oss_path = f"{video_script_oss_path[:index]}成品视频/{file_name}"
+    oss_path = f"{video_script_oss_path[:index]}ai_clip/{file_name}"
     logging.info(f"[视频上传OSS] {video_save_path} -> {oss_path}")
     upload_local_file_to_oss(local_file_path=video_save_path, oss_file_path=oss_path)
     logging.info("[视频上传OSS] 完成")
