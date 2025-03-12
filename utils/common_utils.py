@@ -365,8 +365,8 @@ def get_local_ip():
         return "127.0.0.1"  # 失败时返回本地回环地址
 
 
-def download_url_image_to_local(url, save_path):
-    """下载图片到本地指定位置"""
+def download_by_url_to_local(url, save_path):
+    """下载地址内容到本地指定位置"""
     try:
         response = requests.get(url, stream=True, timeout=10)
         response.raise_for_status()

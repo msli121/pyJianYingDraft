@@ -333,6 +333,8 @@ def list_first_level_oss_url(oss_dir, expiration=7200):
 def process_url(url):
     if not url:
         return ""
+    # 中文字符解码
+    url = urllib.parse.unquote(url, encoding='utf-8', errors='replace')
 
     # 去除域名前缀
     if url.startswith("http"):
@@ -529,6 +531,7 @@ def check_file_exists_in_oss(oss_file_path):
         # 处理其他异常
         print(f"检查文件是否存在时出错：{e}")
         return False
+
 
 if __name__ == '__main__':
     config = app_config.AppConfig()
