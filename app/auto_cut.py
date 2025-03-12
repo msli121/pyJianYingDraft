@@ -11,11 +11,11 @@ import logging
 import os
 import random
 
-from app_config import AppConfig, BASE_DIR
 import pyJianYingDraft as draft
+from app_config import AppConfig, BASE_DIR
 from pyJianYingDraft import trange, Clip_settings
 from utils.common_utils import get_current_datetime_str_, download_by_url_to_local
-from utils.oss_utils import check_file_exists_in_oss, download_file_from_oss, init_oss, upload_local_file_to_oss, \
+from utils.oss_utils import init_oss, upload_local_file_to_oss, \
     generate_get_url, process_url
 
 LOCAL_HOUSE_MATERIAL_DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -198,7 +198,7 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
         logging.info(f'背景音乐: {bgm_local_path}, 音量：{volume}')
         # 添加背景音乐片段
         bgm_segment = draft.Audio_segment(bgm_material, trange("0s", script.duration),
-                                          volume=BGM_VOLUME_MAP.get(bgm_basename, 0.6))
+                                          volume=volume)
         # 增加一个1s的淡入和淡出
         bgm_segment.add_fade("1s", "1s")
         # 添加背景音乐到音频轨道
