@@ -5,9 +5,11 @@
 @Author: lms
 @Date: 2025/2/24 19:30
 """
+import glob
 import json
 import logging
 import os
+import random
 
 from app_config import AppConfig, BASE_DIR
 import pyJianYingDraft as draft
@@ -181,6 +183,10 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
 
     # 背景音乐轨道
     bgm_local_path = video_script_data.get('bgm_local_path')
+    if not bgm_local_path:
+        music_files = glob.glob(os.path.join(LOCAL_HOUSE_MATERIAL_BGM_DIR, '*.mp3'))
+        # 从 music_files 中随机选择一个
+        bgm_local_path = random.choice(music_files) if music_files else None
     if bgm_local_path and os.path.exists(bgm_local_path):
         # 添加背音乐音频轨道
         bgm_track_name = 'bgm'
@@ -188,6 +194,8 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
         script.add_track(track_type=draft.Track_type.audio, track_name=bgm_track_name)
         bgm_material = draft.Audio_material(bgm_local_path)
         script.add_material(bgm_material)
+        volume = BGM_VOLUME_MAP.get(bgm_basename, 0.6)
+        logging.info(f'背景音乐: {bgm_local_path}, 音量：{volume}')
         # 添加背景音乐片段
         bgm_segment = draft.Audio_segment(bgm_material, trange("0s", script.duration),
                                           volume=BGM_VOLUME_MAP.get(bgm_basename, 0.6))
