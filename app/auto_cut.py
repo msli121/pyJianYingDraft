@@ -42,7 +42,7 @@ def download_video_script_and_material(task_id, house_no, video_script_url):
         raise Exception(f"视频脚本文件地址不存在")
 
     bgm_data_dir = os.path.join(LOCAL_HOUSE_MATERIAL_BGM_DIR)
-    data_dir = os.path.join(LOCAL_HOUSE_MATERIAL_DATA_DIR, house_no, task_id)
+    data_dir = os.path.join(LOCAL_HOUSE_MATERIAL_DATA_DIR, house_no, str(task_id))
     os.makedirs(data_dir, exist_ok=True)
     os.makedirs(bgm_data_dir, exist_ok=True)
 
