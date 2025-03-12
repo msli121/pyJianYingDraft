@@ -82,7 +82,7 @@ def download_video_script_and_material(task_id, house_no, video_script_url):
             filename = os.path.basename(process_url(srt_oss_path))
             srt_local_path = os.path.join(data_dir, filename)
             if not os.path.exists(srt_local_path):
-                download_by_url_to_local(clip_video_oss_path, srt_local_path)
+                download_by_url_to_local(srt_oss_path, srt_local_path)
                 logging.info(f"SRT文件已下载到本地：{srt_local_path}")
             else:
                 logging.info(f"SRT文件已存在：{srt_local_path}")
