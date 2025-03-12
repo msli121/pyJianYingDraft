@@ -92,7 +92,7 @@ def download_video_script_and_material(task_id, house_no, video_script_url):
             filename = os.path.basename(process_url(wav_oss_path))
             wav_local_path = os.path.join(data_dir, filename)
             if not os.path.exists(wav_local_path):
-                download_by_url_to_local(clip_video_oss_path, wav_local_path)
+                download_by_url_to_local(wav_oss_path, wav_local_path)
                 logging.info(f"WAV文件已下载到本地：{wav_local_path}")
             else:
                 logging.info(f"WAV文件已存在：{wav_local_path}")
