@@ -239,6 +239,8 @@ def jy_auto_cut_and_export_one_step(task_id, house_no, video_script_url):
     logging.info(f"[自动导出视频] 完成 视频地址={video_save_path}")
     # 视频上传OSS
     oss_path = video_save_path.replace(LOCAL_HOUSE_MATERIAL_DATA_DIR, OSS_VIDEO_MAKING_PATH_PREFIX)
+    # 替换oss_path中 \ 为 /
+    oss_path = oss_path.replace("\\", "/")
     logging.info(f"[视频上传OSS] {video_save_path} -> {oss_path}")
     if not upload_local_file_to_oss(local_file_path=video_save_path, oss_file_path=oss_path):
         raise Exception("成品视频上传OSS失败")
