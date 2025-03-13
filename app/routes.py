@@ -5,6 +5,8 @@
 @Author: lms
 @Date: 2025/2/25 11:20
 """
+import json
+
 from flask import Blueprint, jsonify, request, current_app
 
 from app.auto_cut import jy_auto_cut_and_export_one_step
@@ -29,7 +31,7 @@ def jy_auto_cut():
     """剪映自动裁剪"""
     log = current_app.logger
     data = request.get_json(silent=True) or {}
-    log.info("[剪映自动裁剪] request data: %s", data)
+    log.info("[剪映自动裁剪] request data: %s", json.dumps(data, ensure_ascii=False))
     task_id = data.get('task_id')
     house_no = data.get("house_no")
     video_script_url = data.get("video_script_url")

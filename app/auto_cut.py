@@ -212,8 +212,9 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
 def jy_auto_export_video(jy_draft_name, video_save_path):
     # 此前需要将剪映打开，并位于目录页
     ctrl = draft.Jianying_controller()
-    thread = ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
-    thread.join()
+    # thread = ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
+    # thread.join()
+    return ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
 
 
 # 剪映自动一步到位，下载素材+剪辑+导出+上传OSS
@@ -233,12 +234,14 @@ def jy_auto_cut_and_export_one_step(task_id, house_no, video_script_url):
     filename = f"{house_no}_{task_id}_{get_current_datetime_str_()}.mp4"
     video_save_path = os.path.join(LOCAL_HOUSE_MATERIAL_DATA_DIR, "ai_clip_finish", filename)
     os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
-    jy_auto_export_video(jy_draft_name, video_save_path)
-    logging.info(f"[剪映自动化导出视频] 完成 视频地址={video_save_path}")
+    if not jy_auto_export_video(jy_draft_name, video_save_path):
+        raise Exception("自动导出视频失败")
+    logging.info(f"[自动导出视频] 完成 视频地址={video_save_path}")
     # 视频上传OSS
     oss_path = video_save_path.replace(LOCAL_HOUSE_MATERIAL_DATA_DIR, OSS_VIDEO_MAKING_PATH_PREFIX)
     logging.info(f"[视频上传OSS] {video_save_path} -> {oss_path}")
-    upload_local_file_to_oss(local_file_path=video_save_path, oss_file_path=oss_path)
+    if not upload_local_file_to_oss(local_file_path=video_save_path, oss_file_path=oss_path):
+        raise Exception("成品视频上传OSS失败")
     logging.info("[视频上传OSS] 完成")
     # 拼接OSS地址
     oss_url = generate_get_url(oss_path)
