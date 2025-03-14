@@ -43,12 +43,12 @@ def jy_auto_cut():
             raise ValueError("缺少房源编号")
         if not video_script_url:
             raise ValueError("缺少视频脚本地址")
-        oss_url = jy_auto_cut_and_export_one_step(task_id=task_id, house_no=house_no, video_script_url=video_script_url)
+        url = jy_auto_cut_and_export_one_step(task_id=task_id, house_no=house_no, video_script_url=video_script_url)
         res = {
             "code": 0,
             "msg": "success",
             "data": {
-                "oss_url": oss_url,
+                "url": url,
             }
         }
         if notify_url:
@@ -57,7 +57,7 @@ def jy_auto_cut():
                        f"房源编号: {house_no}\n"
                        f"员工号:{staff_id}\n"
                        f"昵称:{nickname}\n"
-                       f"视频URL: {oss_url}")
+                       f"视频URL: {url}")
             send_qywx_message(message, url=notify_url)
         return jsonify(res), 200
     except Exception as e:

@@ -21,6 +21,7 @@ from utils.oss_utils import init_oss, upload_local_file_to_oss, \
 LOCAL_HOUSE_MATERIAL_DATA_DIR = os.path.join(BASE_DIR, 'data')
 LOCAL_HOUSE_MATERIAL_BGM_DIR = os.path.join(BASE_DIR, 'data', 'bgm')
 OSS_VIDEO_MAKING_PATH_PREFIX = 'video-making/data'  # OSS的视频剪辑数据存放前缀
+OSS_VIDEO_MAKING_PUBLIC_PATH_PREFIX = 'video-making/public'  # OSS的视频剪辑公共素材存放前缀
 OSS_VIDEO_MAKING_BGM_PATH_PREFIX = 'video-making/bgm'  # OSS的视频剪辑背景音乐存放前缀
 
 BGM_VOLUME_MAP = {
@@ -238,7 +239,7 @@ def jy_auto_cut_and_export_one_step(task_id, house_no, video_script_url):
         raise Exception("自动导出视频失败")
     logging.info(f"[自动导出视频] 完成 视频地址={video_save_path}")
     # 视频上传OSS
-    oss_path = video_save_path.replace(LOCAL_HOUSE_MATERIAL_DATA_DIR, OSS_VIDEO_MAKING_PATH_PREFIX)
+    oss_path = video_save_path.replace(LOCAL_HOUSE_MATERIAL_DATA_DIR, OSS_VIDEO_MAKING_PUBLIC_PATH_PREFIX)
     # 替换oss_path中 \ 为 /
     oss_path = oss_path.replace("\\", "/")
     logging.info(f"[视频上传OSS] {video_save_path} -> {oss_path}")
@@ -246,9 +247,11 @@ def jy_auto_cut_and_export_one_step(task_id, house_no, video_script_url):
         raise Exception("成品视频上传OSS失败")
     logging.info("[视频上传OSS] 完成")
     # 拼接OSS地址
-    oss_url = generate_get_url(oss_path)
-    logging.info(f"oss_url={oss_url}")
-    return oss_url
+    url = generate_get_url(oss_path)
+    if url:
+        url = url.split("?")[0]
+    logging.info(f"url={url}")
+    return url
 
 
 if __name__ == '__main__':
