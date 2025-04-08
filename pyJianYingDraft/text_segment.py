@@ -2,6 +2,7 @@
 
 import json
 import uuid
+from copy import deepcopy
 
 from typing import Dict, Tuple, Any
 from typing import Union, Optional, Literal
@@ -34,11 +35,17 @@ class Text_style:
     align: Literal[0, 1, 2]
     """对齐方式"""
     vertical: bool
-    """竖排文本"""
+    """是否为竖排文本"""
+
+    letter_spacing: int
+    """字符间距"""
+    line_spacing: int
+    """行间距"""
 
     def __init__(self, *, size: float = 8.0, bold: bool = False, italic: bool = False, underline: bool = False,
                  color: Tuple[float, float, float] = (1.0, 1.0, 1.0), alpha: float = 1.0,
-                 align: Literal[0, 1, 2] = 0, vertical: bool = False):
+                 align: Literal[0, 1, 2] = 0, vertical: bool = False,
+                 letter_spacing: int = 0, line_spacing: int = 0):
         """
         Args:
             size (`float`, optional): 字体大小, 默认为8.0
@@ -48,7 +55,9 @@ class Text_style:
             color (`Tuple[float, float, float]`, optional): 字体颜色, RGB三元组, 取值范围为[0, 1], 默认为白色
             alpha (`float`, optional): 字体不透明度, 取值范围[0, 1], 默认不透明
             align (`int`, optional): 对齐方式, 0: 左对齐, 1: 居中, 2: 右对齐, 默认为左对齐
-            vertical (`bool`, optional): 是否是竖排文本, 默认为否
+            vertical (`bool`, optional): 是否为竖排文本, 默认为否
+            letter_spacing (`int`, optional): 字符间距, 定义与剪映中一致, 默认为0
+            line_spacing (`int`, optional): 行间距, 定义与剪映中一致, 默认为0
         """
         self.size = size
         self.bold = bold
@@ -60,6 +69,9 @@ class Text_style:
 
         self.align = align
         self.vertical = vertical
+
+        self.letter_spacing = letter_spacing
+        self.line_spacing = line_spacing
 
 class Text_border:
     """文本描边的参数"""
@@ -94,6 +106,98 @@ class Text_border:
             "width": self.width
         }
 
+class Text_background:
+    """文本背景参数"""
+
+    style: Literal[0, 2]
+    """背景样式"""
+
+    alpha: float
+    """背景不透明度"""
+    color: str
+    """背景颜色, 格式为'#RRGGBB'"""
+    round_radius: float
+    """背景圆角半径"""
+    height: float
+    """背景高度"""
+    width: float
+    """背景宽度"""
+    horizontal_offset: float
+    """背景水平偏移"""
+    vertical_offset: float
+    """背景竖直偏移"""
+
+    def __init__(self, *, color: str, style: Literal[1, 2] = 1, alpha: float = 1.0, round_radius: float = 0.0,
+                 height: float = 0.14, width: float = 0.14,
+                 horizontal_offset: float = 0.5, vertical_offset: float = 0.5):
+        """
+        Args:
+            color (`str`): 背景颜色, 格式为'#RRGGBB'
+            style (`int`, optional): 背景样式, 1和2分别对应剪映中的两种样式, 默认为1
+            alpha (`float`, optional): 背景不透明度, 与剪映中一致, 取值范围[0, 1], 默认为1.0
+            round_radius (`float`, optional): 背景圆角半径, 与剪映中一致, 取值范围[0, 1], 默认为0.0
+            height (`float`, optional): 背景高度, 与剪映中一致, 取值范围为[0, 1], 默认为0.14
+            width (`float`, optional): 背景宽度, 与剪映中一致, 取值范围为[0, 1], 默认为0.14
+            horizontal_offset (`float`, optional): 背景水平偏移, 与剪映中一致, 取值范围为[0, 1], 默认为0.5
+            vertical_offset (`float`, optional): 背景竖直偏移, 与剪映中一致, 取值范围为[0, 1], 默认为0.5
+        """
+        self.style = (0, 2)[style - 1]
+
+        self.alpha = alpha
+        self.color = color
+        self.round_radius = round_radius
+        self.height = height
+        self.width = width
+        self.horizontal_offset = horizontal_offset * 2 - 1
+        self.vertical_offset = vertical_offset * 2 - 1
+
+    def export_json(self) -> Dict[str, Any]:
+        """生成子JSON数据, 在Text_segment导出时合并到其中"""
+        return {
+            "background_style": self.style,
+            "background_color": self.color,
+            "background_alpha": self.alpha,
+            "background_round_radius": self.round_radius,
+            "background_height": self.height,
+            "background_width": self.width,
+            "background_horizontal_offset": self.horizontal_offset,
+            "background_vertical_offset": self.vertical_offset,
+        }
+
+class TextBubble:
+    """文本气泡素材, 与滤镜素材本质上一致"""
+
+    global_id: str
+    """气泡全局id, 由程序自动生成"""
+
+    effect_id: str
+    resource_id: str
+
+    def __init__(self, effect_id: str, resource_id: str):
+        self.global_id = uuid.uuid4().hex
+        self.effect_id = effect_id
+        self.resource_id = resource_id
+
+    def export_json(self) -> Dict[str, Any]:
+        return {
+            "apply_target_type": 0,
+            "effect_id": self.effect_id,
+            "id": self.global_id,
+            "resource_id": self.resource_id,
+            "type": "text_shape",
+            "value": 1.0,
+            # 不导出path和request_id
+        }
+
+class TextEffect(TextBubble):
+    """文本花字素材, 与滤镜素材本质上也一致"""
+
+    def export_json(self) -> Dict[str, Any]:
+        ret = super().export_json()
+        ret["type"] = "text_effect"
+        ret["source_platform"] = 1
+        return ret
+
 class Text_segment(Visual_segment):
     """文本片段类, 目前仅支持设置基本的字体样式"""
 
@@ -106,11 +210,18 @@ class Text_segment(Visual_segment):
 
     border: Optional[Text_border]
     """文本描边参数, None表示无描边"""
+    background: Optional[Text_background]
+    """文本背景参数, None表示无背景"""
+
+    bubble: Optional[TextBubble]
+    """文本气泡效果, 在放入轨道时加入素材列表中"""
+    effect: Optional[TextEffect]
+    """文本花字效果, 在放入轨道时加入素材列表中, 目前仅支持一部分花字效果"""
 
     def __init__(self, text: str, timerange: Timerange, *,
                  font: Optional[Font_type] = None,
                  style: Optional[Text_style] = None, clip_settings: Optional[Clip_settings] = None,
-                 border: Optional[Text_border] = None):
+                 border: Optional[Text_border] = None, background: Optional[Text_background] = None):
         """创建文本片段, 并指定其时间信息、字体样式及图像调节设置
 
         片段创建完成后, 可通过`Script_file.add_segment`方法将其添加到轨道中
@@ -122,6 +233,7 @@ class Text_segment(Visual_segment):
             style (`Text_style`, optional): 字体样式, 包含大小/颜色/对齐/透明度等.
             clip_settings (`Clip_settings`, optional): 图像调节设置, 默认不做任何变换
             border (`Text_border`, optional): 文本描边参数, 默认无描边
+            background (`Text_background`, optional): 文本背景参数, 默认无背景
         """
         super().__init__(uuid.uuid4().hex, None, timerange, 1.0, 1.0, clip_settings=clip_settings)
 
@@ -129,6 +241,29 @@ class Text_segment(Visual_segment):
         self.font = font.value if font else None
         self.style = style or Text_style()
         self.border = border
+        self.background = background
+
+        self.bubble = None
+        self.effect = None
+
+    @classmethod
+    def create_from_template(cls, text: str, timerange: Timerange, template: "Text_segment") -> "Text_segment":
+        """根据模板创建新的文本片段, 并指定其文本内容"""
+        new_segment = cls(text, timerange, style=deepcopy(template.style), clip_settings=deepcopy(template.clip_settings),
+                          border=deepcopy(template.border), background=deepcopy(template.background))
+        new_segment.font = deepcopy(template.font)
+
+        # 处理动画等
+        if template.animations_instance:
+            new_segment.animations_instance = deepcopy(template.animations_instance)
+            new_segment.animations_instance.animation_id = uuid.uuid4().hex
+            new_segment.extra_material_refs.append(new_segment.animations_instance.animation_id)
+        if template.bubble:
+            new_segment.add_bubble(template.bubble.effect_id, template.bubble.resource_id)
+        if template.effect:
+            new_segment.add_effect(template.effect.effect_id)
+
+        return new_segment
 
     def add_animation(self, animation_type: Union[Text_intro, Text_outro, Text_loop_anim],
                       duration: Union[str, float] = 500000) -> "Text_segment":
@@ -163,11 +298,35 @@ class Text_segment(Visual_segment):
 
         return self
 
+    def add_bubble(self, effect_id: str, resource_id: str) -> "Text_segment":
+        """根据素材信息添加气泡效果, 相应素材信息可通过`Script_file.inspect_material`从模板中获取
+
+        Args:
+            effect_id (`str`): 气泡效果的effect_id
+            resource_id (`str`): 气泡效果的resource_id
+        """
+        self.bubble = TextBubble(effect_id, resource_id)
+        self.extra_material_refs.append(self.bubble.global_id)
+        return self
+
+    def add_effect(self, effect_id: str) -> "Text_segment":
+        """根据素材信息添加花字效果, 相应素材信息可通过`Script_file.inspect_material`从模板中获取
+
+        Args:
+            effect_id (`str`): 花字效果的effect_id, 也同时是其resource_id
+        """
+        self.effect = TextEffect(effect_id, effect_id)
+        self.extra_material_refs.append(self.effect.global_id)
+        return self
+
     def export_material(self) -> Dict[str, Any]:
         """与此文本片段联系的素材, 以此不再单独定义Text_material类"""
         # 叠加各类效果的flag
         check_flag: int = 7
-        if self.border: check_flag |= 8
+        if self.border:
+            check_flag |= 8
+        if self.background:
+            check_flag |= 16
 
         content_json = {
             "styles": [
@@ -195,45 +354,33 @@ class Text_segment(Visual_segment):
         if self.font:
             content_json["styles"][0]["font"] = {
                 "id": self.font.resource_id,
-                "path": "C:/%s.ttf" % self.font.name
+                "path": "C:/%s.ttf" % self.font.name  # 并不会真正在此处放置字体文件
+            }
+        if self.effect:
+            content_json["styles"][0]["effectStyle"] = {
+                "id": self.effect.effect_id,
+                "path": "C:"  # 并不会真正在此处放置素材文件
             }
 
-        return {
-            "add_type": 0,
+        ret = {
+            "id": self.material_id,
+            "content": json.dumps(content_json, ensure_ascii=False),
 
             "typesetting": int(self.style.vertical),
             "alignment": self.style.align,
+            "letter_spacing": self.style.letter_spacing * 0.05,
+            "line_spacing": 0.02 + self.style.line_spacing * 0.05,
 
-            # ?
-            # "caption_template_info": {
-            #     "category_id": "",
-            #     "category_name": "",
-            #     "effect_id": "",
-            #     "is_new": False,
-            #     "path": "",
-            #     "request_id": "",
-            #     "resource_id": "",
-            #     "resource_name": "",
-            #     "source_platform": 0
-            # },
+            "line_feed": 1,
+            "line_max_width": 0.82,
+            "force_apply_line_max_width": False,
+
+            "check_flag": check_flag,
+
+            "type": "text",
 
             # 混合 (+4)
             # "global_alpha": 1.0,
-
-            # 描边 (+8), 似乎也会被content覆盖
-            # "border_alpha": 1.0,
-            # "border_color": "",
-            # "border_width": 0.08,
-
-            # 背景 (+16)
-            # "background_style": 0,
-            # "background_color": "",
-            # "background_alpha": 1.0,
-            # "background_round_radius": 0.0,
-            # "background_height": 0.14,
-            # "background_width": 0.14,
-            # "background_horizontal_offset": 0.0,
-            # "background_vertical_offset": 0.0,
 
             # 发光 (+64)，属性由extra_material_refs记录
 
@@ -270,67 +417,9 @@ class Text_segment(Visual_segment):
             # "text_preset_resource_id": "",
             # "text_size": 30,
             # "underline": False,
-
-
-            "base_content": "",
-            "bold_width": 0.0,
-
-            "check_flag": check_flag,
-            "combo_info": {
-                "text_templates": []
-            },
-            "content": json.dumps(content_json, ensure_ascii=False),
-            "fixed_height": -1.0,
-            "fixed_width": -1.0,
-            "force_apply_line_max_width": False,
-
-            "group_id": "",
-
-            "id": self.material_id,
-            "initial_scale": 1.0,
-            "inner_padding": -1.0,
-            "is_rich_text": False,
-            "italic_degree": 0,
-            "ktv_color": "",
-            "language": "",
-            "layer_weight": 1,
-            "letter_spacing": 0.0,
-            "line_feed": 1,
-            "line_max_width": 0.82,
-            "line_spacing": 0.02,
-            "multi_language_current": "none",
-            "name": "",
-            "original_size": [],
-
-            "preset_category": "",
-            "preset_category_id": "",
-            "preset_has_set_alignment": False,
-            "preset_id": "",
-            "preset_index": 0,
-            "preset_name": "",
-
-            "recognize_task_id": "",
-            "recognize_type": 0,
-            "relevance_segment": [],
-
-            "shape_clip_x": False,
-            "shape_clip_y": False,
-            "source_from": "",
-            "style_name": "",
-            "sub_type": 0,
-            "subtitle_keywords": None,
-            "subtitle_template_original_fontsize": 0.0,
-            "text_to_audio_ids": [],
-            "tts_auto_update": False,
-            "type": "text",
-
-            "underline_offset": 0.22,
-            "underline_width": 0.05,
-
-            "use_effect_default_color": True,
-            "words": {
-                "end_time": [],
-                "start_time": [],
-                "text": []
-            }
         }
+
+        if self.background:
+            ret.update(self.background.export_json())
+
+        return ret
