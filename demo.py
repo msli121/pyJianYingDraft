@@ -4,7 +4,9 @@ import pyJianYingDraft as draft
 from pyJianYingDraft import Intro_type, Transition_type, trange, tim
 
 # 保存路径
-DUMP_PATH = r"<你的草稿文件夹>/draft_content.json"
+jy_draft_dir = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", "故事片段模板")
+DUMP_PATH = os.path.join(jy_draft_dir, "draft_content.json")
+# DUMP_PATH = r"<你的草稿文件夹>/draft_content.json"
 assert os.path.exists(DUMP_PATH), f"未找到草稿文件{os.path.abspath(DUMP_PATH)}"
 
 tutorial_asset_dir = os.path.join(os.path.dirname(__file__), 'readme_assets', 'tutorial')
