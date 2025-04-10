@@ -1,5 +1,5 @@
 """
-@File: qywx.py
+@File: qywx_utils.py
 @Description: 企业微信消息推送
 
 @Author: lms

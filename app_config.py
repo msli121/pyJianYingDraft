@@ -6,6 +6,7 @@
 @Date: 2025/2/25 09:59
 """
 import os
+from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
 
@@ -59,6 +60,19 @@ class AppConfig:
     ACCESS_KEY_ID = os.getenv('ACCESS_KEY_ID')
     # 阿里云AccessKeySecret
     ACCESS_KEY_SECRET = os.getenv('ACCESS_KEY_SECRET')
+
+    # 任务循环配置
+    TASK_LOOP_ENABLED = parse_boolean(os.getenv('TASK_LOOP_ENABLED', True))  # 是否启用任务循环
+    TASK_LOOP_INTERVAL = int(os.getenv('TASK_LOOP_INTERVAL', 10))  # 任务循环间隔(秒)
+
+    # 数据库
+    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{os.getenv('DB1_USER')}:{quote_plus(os.getenv('DB1_PASSWORD'))}@{os.getenv('DB1_HOST')}:{os.getenv('DB1_PORT')}/{os.getenv('DB1_NAME')}"
+    # 数据库链接配置
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # 用来控制是否追踪对象的修改并发送信号
+    SQLALCHEMY_POOL_SIZE = 200  # 设置连接池大小
+    SQLALCHEMY_POOL_TIMEOUT = 60  # 设置连接池超时时间
+    SQLALCHEMY_POOL_RECYCLE = 1800  # 设置连接池中连接的回收时间
+    SQLALCHEMY_MAX_OVERFLOW = 10  # 设置连接池的最大溢出数
 
 
 if __name__ == '__main__':

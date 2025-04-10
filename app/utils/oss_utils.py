@@ -16,7 +16,7 @@ from hashlib import sha1
 import logging
 import app_config
 
-from utils.common_utils import is_image_url, is_video_url, compress_image
+from app.utils.common_utils import is_image_url, is_video_url, compress_image
 
 # 使用标准库 logging 来获取日志记录器
 logging.basicConfig(

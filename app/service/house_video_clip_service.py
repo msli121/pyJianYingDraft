@@ -1,6 +1,6 @@
 """
-@File: auto_cut.py
-@Description: 视频脚本解析
+@File: house_video_clip_service.py
+@Description: 房源视频脚本解析
 
 @Author: lms
 @Date: 2025/2/24 19:30
@@ -14,8 +14,8 @@ import random
 import pyJianYingDraft as draft
 from app_config import AppConfig, BASE_DIR
 from pyJianYingDraft import trange, Clip_settings
-from utils.common_utils import get_current_datetime_str_, download_by_url_to_local
-from utils.oss_utils import init_oss, upload_local_file_to_oss, \
+from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local
+from app.utils.oss_utils import init_oss, upload_local_file_to_oss, \
     generate_get_url, process_url
 
 LOCAL_HOUSE_MATERIAL_DATA_DIR = os.path.join(BASE_DIR, 'data')
