@@ -28,7 +28,7 @@ setup_conda_env() {
     echo "Conda 环境 '${CONDA_ENV_NAME}' 已激活。"
 
     # 安装依赖包
-    pip install -r requirements.txt
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
     echo "依赖包已安装"
 }
