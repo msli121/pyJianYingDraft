@@ -13,7 +13,7 @@ from app.utils.oss_utils import init_oss
 from app.extensions.db import init_databases
 from app.logging_config import setup_logging
 from app.controller.auto_clip_controller import api_blueprint
-from app.task_processor import task_processor
+from app.task_processor import TaskProcessor
 
 
 def create_app(config_class=AppConfig):
@@ -40,8 +40,10 @@ def create_app(config_class=AppConfig):
     # 初始化任务处理器
     if app.config.get('TASK_LOOP_ENABLED', False):
         app.logger.info("启动任务处理器...")
+        # 全局任务处理器实例
+        task_processor = TaskProcessor(app=app)
         task_processor.start()
-        
+
         # 注册应用关闭时的清理函数
         @app.teardown_appcontext
         def cleanup(exception=None):
