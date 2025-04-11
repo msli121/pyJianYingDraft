@@ -61,3 +61,8 @@ def setup_logging(app):
     werkzeug_logger = logging.getLogger('werkzeug')
     werkzeug_logger.handlers.clear()
     werkzeug_logger.propagate = True
+
+    # 设置第三方日志级别
+    logging.getLogger('apscheduler').setLevel(logging.WARNING) # apscheduler
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Flask 开发服务器日志
+    logging.getLogger('urllib3').setLevel(logging.WARNING)  # requests/urllib3 日志
