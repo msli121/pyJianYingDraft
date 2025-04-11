@@ -30,7 +30,7 @@ audio_segment = draft.Audio_segment(audio_material,
 audio_segment.add_fade("1s", "0s")                       # 增加一个1s的淡入
 
 # 创建视频片段
-video_segment = draft.Video_segment(video_material, trange("0s", "4.2s"))  # 片段将位于轨道上的0s-4.2s（取素材前4.2s内容，注意此处4.2s表示持续时长）
+video_segment =     draft.Video_segment(video_material, trange("0s", "4.2s"))  # 片段将位于轨道上的0s-4.2s（取素材前4.2s内容，注意此处4.2s表示持续时长）
 video_segment.add_animation(Intro_type.斜切)                               # 添加一个入场动画“斜切”
 
 gif_segment = draft.Video_segment(gif_material,

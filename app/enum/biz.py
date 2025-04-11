@@ -66,3 +66,48 @@ class BizPlatformTaskPriorityEnum(Enum):
     @classmethod
     def get_members(cls):
         return {e.value: e.desc for e in cls}
+
+
+class BizPlatformSegmentTypeEnum(Enum):
+    """素材片段类型枚举"""
+    TEXT = ('text', '文本')
+    SUBTITLE = ('subtitle', '字幕')
+    IMAGE = ('image', '图片')
+    VIDEO = ('video', '视频')
+    AUDIO = ('audio', '音频')
+
+    def __new__(cls, value, desc):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.desc = desc
+        return obj
+
+    @property
+    def value(self):
+        return self._value_
+
+    @classmethod
+    def get_members(cls):
+        return {e.value: e.desc for e in cls}
+
+
+class BizPlatformTrackTypeEnum(Enum):
+    """轨道类型类型枚举"""
+    TEXT = ('text', '文本')
+    VIDEO = ('video', '视频')
+    SUBTITLE = ('video', '字幕')
+    AUDIO = ('audio', '音频')
+
+    def __new__(cls, value, desc):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.desc = desc
+        return obj
+
+    @property
+    def value(self):
+        return self._value_
+
+    @classmethod
+    def get_members(cls):
+        return {e.value: e.desc for e in cls}

@@ -10,9 +10,10 @@ import logging
 
 from flask import Blueprint, jsonify, request
 
-from app.entity.jy_task import JyTaskOutputInfo
+from app.entity.jy_task import JyTaskOutputInfo, GoodStoryClipReqInfo
 from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum, BizPlatformTaskPriorityEnum
 from app.models.biz import BizPlatformJyTask
+from app.service.good_story_clip_service import GoodStoryClipService
 from app.service.house_video_clip_service import jy_auto_cut_and_export_one_step
 from app.utils.qywx_utils import send_qywx_message
 from app.utils.response_utils import success_response, error_response
@@ -135,6 +136,29 @@ def sync_good_story_clip_route():
         return jsonify(success_response(res)), 200
     except Exception as e:
         logger.error("[异步自动剪辑好事故事片段] Error: %s", str(e), exc_info=True)
+        return jsonify({"code": 1, "msg": str(e), "data": None}), 200
+
+
+@api_blueprint.route('/api/ai-clip/good-story-clip', methods=['POST'])
+def good_story_clip_route():
+    """同步自动剪辑好事故事片段"""
+    try:
+        data = request.get_json(silent=True) or {}
+        logger.info("[同步自动剪辑好事故事片段] request data: %s", json.dumps(data, ensure_ascii=False))
+        story_id = data.get('story_id')
+        tracks = data.get("tracks")
+        if not story_id:
+            raise ValueError("缺少故事ID")
+        if not tracks or len(tracks) == 0:
+            raise ValueError("缺少轨道信息")
+        req_data = GoodStoryClipReqInfo.from_dict(data)
+        GoodStoryClipService.download_good_story_material(req_data)
+        GoodStoryClipService.cut_good_story_clip(req_data)
+        local_path = GoodStoryClipService.export_good_story_clip(req_data)
+        oss_url = GoodStoryClipService.upload_to_oss(local_path)
+        return jsonify(success_response(oss_url)), 200
+    except Exception as e:
+        logger.error("[同步自动剪辑好事故事片段] Error: %s", str(e), exc_info=True)
         return jsonify({"code": 1, "msg": str(e), "data": None}), 200
 
 
