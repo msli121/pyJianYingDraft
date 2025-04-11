@@ -41,6 +41,7 @@ class GoodStorySegmentInfo(BaseModel):
     好故事剪辑片段信息
     """
     type: Optional[str] = None  # 片段类型 从 BizPlatformSegmentTypeEnum 中枚举
+    text: Optional[str] = None  # 文本内容
     url: Optional[str] = None  # 片段素材地址
     filename: Optional[str] = None  # 文件名称
     start_time_ms: Optional[int] = None  # 片段开始时间，毫秒
@@ -50,7 +51,7 @@ class GoodStorySegmentInfo(BaseModel):
     entry_animation_type: Optional[str] = None  # 进入动画类型
     has_transition: Optional[bool] = False  # 是否有转场
     transition_type: Optional[str] = None  # 转场类型
-    volume: Optional[float] = 0.6  # 音量
+    volume: Optional[float] = None  # 音量
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -58,6 +59,7 @@ class GoodStorySegmentInfo(BaseModel):
         """
         return {
             "type": self.type,
+            "text": self.text,
             "url": self.url,
             "filename": self.filename,
             "start_time_ms": self.start_time_ms,
@@ -78,7 +80,7 @@ class GoodStorySegmentInfo(BaseModel):
         # 确保数据中的布尔值和浮点数类型正确
         data["has_entry_animation"] = bool(data.get("has_entry_animation", False))
         data["has_transition"] = bool(data.get("has_transition", False))
-        data["volume"] = float(data.get("volume", 0.6))
+        # data["volume"] = float(data.get("volume", 0.6))
 
         return cls(**data)
 
