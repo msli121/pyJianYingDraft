@@ -6,8 +6,10 @@ from typing import Dict
 from flask import current_app
 
 from app.controller.auto_clip_controller import handle_auto_clip_house_video
+from app.entity.jy_task import GoodStoryClipReqInfo
 from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum
 from app.models.biz import BizPlatformJyTask
+from app.service.good_story_clip_service import GoodStoryClipService
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,12 @@ class TaskService:
     def process_next_task(cls):
         """处理下一个待执行任务"""
         try:
+            filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value)}
+            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1, 1, filters=filters)
+            if task_count > 0:
+                task_info = task_infos[0]
+                logger.info(f"当前有任务在执行 task_id:{task_info.get('id')}, task_name:{task_info.get('task_name')}")
+                return None
             filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Pending.value)}
             orders = [
                 {"key": "task_priority", "value": "desc"},
@@ -70,7 +78,8 @@ class TaskService:
 
             if task_type == BizPlatformJyTaskTypeEnum.HouseVideoClip.value:
                 return cls._process_house_video_task(task_id, task_param)
-
+            elif task_type == BizPlatformJyTaskTypeEnum.GoodStoryClip.value:
+                return cls._process_good_story_clip_task(task_id, task_param)
             raise ValueError(f"不支持的任务类型: {task_type}")
         except Exception as e:
             logger.error(f"任务处理失败 task_id: {task_id}", exc_info=True)
@@ -89,6 +98,27 @@ class TaskService:
             end_time=datetime.now()
         )
         return True
+
+    @classmethod
+    def _process_good_story_clip_task(cls, task_id: int, task_param: dict):
+        """处理好故事视频剪辑任务"""
+        req_data = GoodStoryClipReqInfo.from_dict(task_param)
+        # 下载素材
+        GoodStoryClipService.download_good_story_material(req_data)
+        # 剪辑
+        GoodStoryClipService.cut_good_story_clip(req_data)
+        # 导出
+        local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
+        # 上传
+        oss_url = GoodStoryClipService.upload_to_oss(local_path)
+        # 更新任务状态
+        BizPlatformJyTask.update(
+            id=task_id,
+            task_status=BizPlatformTaskStatusEnum.DoneSuccess.value,
+            task_message=BizPlatformTaskStatusEnum.DoneSuccess.desc,
+            task_result=oss_url,
+            end_time=datetime.now()
+        )
 
     @staticmethod
     def mark_task_doing(task_id: int):

@@ -20,12 +20,12 @@ def register_scheduled_jobs():
         replace_existing=True
     )
 
-    # 处理下一个任务 - 每10秒执行一次
+    # 处理下一个任务
     scheduler.add_job(
         id='process_next_task',
         func=process_next_task,
         trigger='interval',
-        seconds=10,
+        seconds=5,
         replace_existing=True
     )
     logger.info("定时任务已注册")
