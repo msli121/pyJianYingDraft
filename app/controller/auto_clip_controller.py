@@ -152,9 +152,13 @@ def good_story_clip_route():
         if not tracks or len(tracks) == 0:
             raise ValueError("缺少轨道信息")
         req_data = GoodStoryClipReqInfo.from_dict(data)
+        # 下载素材
         GoodStoryClipService.download_good_story_material(req_data)
+        # 剪辑
         GoodStoryClipService.cut_good_story_clip(req_data)
-        local_path = GoodStoryClipService.export_good_story_clip(req_data)
+        # 导出
+        local_path = GoodStoryClipService.export_good_story_clip(story_id)
+        # 上传
         oss_url = GoodStoryClipService.upload_to_oss(local_path)
         return jsonify(success_response(oss_url)), 200
     except Exception as e:

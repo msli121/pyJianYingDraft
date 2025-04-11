@@ -180,15 +180,14 @@ class GoodStoryClipService:
         script.dump(os.path.join(GOOD_STORY_CLIP_DRAFT_FILE, 'draft_content.json'))
 
     @staticmethod
-    def export_good_story_clip(req_data: GoodStoryClipReqInfo) -> str:
+    def export_good_story_clip(story_id: int) -> str:
         """导出好人好事故事片段"""
-        if req_data is None:
-            raise Exception("素材数据不能为空")
+        if story_id is None or story_id <= 0:
+            raise Exception("故事ID不能为空")
         if not os.path.exists(GOOD_STORY_CLIP_DRAFT_FILE):
             raise Exception(f"故事片段模版文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
         if not os.path.exists(GOOD_STORY_CLIP_DRAFT_FILE):
             raise Exception(f"好人好事故事片段草稿文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
-        story_id = req_data.story_id
         video_save_path = os.path.join(LOCAL_GOOD_STORY_MATERIAL_DATA_DIR, "clips",
                                        f"{story_id}_{get_current_datetime_str_}.mp4")
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)

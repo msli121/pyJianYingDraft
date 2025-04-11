@@ -10,6 +10,7 @@ from typing import Optional, Literal, Callable
 from . import exceptions
 from .exceptions import AutomationError
 
+
 class Export_resolution(Enum):
     """导出分辨率"""
     RES_8K = "8K"
@@ -19,6 +20,7 @@ class Export_resolution(Enum):
     RES_720P = "720P"
     RES_480P = "480P"
 
+
 class Export_framerate(Enum):
     """导出帧率"""
     FR_24 = "24fps"
@@ -27,6 +29,7 @@ class Export_framerate(Enum):
     FR_50 = "50fps"
     FR_60 = "60fps"
 
+
 class ControlFinder:
     """控件查找器，封装部分与控件查找相关的逻辑"""
 
@@ -34,23 +37,28 @@ class ControlFinder:
     def desc_matcher(target_desc: str, depth: int = 2, exact: bool = False) -> Callable[[uia.Control, int], bool]:
         """根据full_description查找控件的匹配器"""
         target_desc = target_desc.lower()
+
         def matcher(control: uia.Control, _depth: int) -> bool:
             if _depth != depth:
                 return False
             full_desc: str = control.GetPropertyValue(30159).lower()
             return (target_desc == full_desc) if exact else (target_desc in full_desc)
+
         return matcher
 
     @staticmethod
     def class_name_matcher(class_name: str, depth: int = 1, exact: bool = False) -> Callable[[uia.Control, int], bool]:
         """根据ClassName查找控件的匹配器"""
         class_name = class_name.lower()
+
         def matcher(control: uia.Control, _depth: int) -> bool:
             if _depth != depth:
                 return False
             curr_class_name: str = control.ClassName.lower()
             return (class_name == curr_class_name) if exact else (class_name in curr_class_name)
+
         return matcher
+
 
 class Jianying_controller:
     """剪映控制器"""
@@ -100,7 +108,8 @@ class Jianying_controller:
         self.get_window()
 
         # 点击导出按钮
-        export_btn = self.app.TextControl(searchDepth=2, Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"))
+        export_btn = self.app.TextControl(searchDepth=2,
+                                          Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"))
         if not export_btn.Exists(0):
             raise AutomationError("未在编辑窗口中找到导出按钮")
         export_btn.Click(simulateMove=False)
@@ -118,10 +127,12 @@ class Jianying_controller:
         # 设置分辨率
         if resolution is not None:
             setting_group = self.app.GroupControl(searchDepth=1,
-                                                  Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE"))
+                                                  Compare=ControlFinder.class_name_matcher(
+                                                      "PanelSettingsGroup_QMLTYPE"))
             if not setting_group.Exists(0):
                 raise AutomationError("未找到导出设置组")
-            resolution_btn = setting_group.TextControl(searchDepth=2, Compare=ControlFinder.desc_matcher("ExportSharpnessInput"))
+            resolution_btn = setting_group.TextControl(searchDepth=2,
+                                                       Compare=ControlFinder.desc_matcher("ExportSharpnessInput"))
             if not resolution_btn.Exists(0.5):
                 raise AutomationError("未找到导出分辨率下拉框")
             resolution_btn.Click(simulateMove=False)
@@ -137,10 +148,12 @@ class Jianying_controller:
         # 设置帧率
         if framerate is not None:
             setting_group = self.app.GroupControl(searchDepth=1,
-                                                  Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE"))
+                                                  Compare=ControlFinder.class_name_matcher(
+                                                      "PanelSettingsGroup_QMLTYPE"))
             if not setting_group.Exists(0):
                 raise AutomationError("未找到导出设置组")
-            framerate_btn = setting_group.TextControl(searchDepth=2, Compare=ControlFinder.desc_matcher("FrameRateInput"))
+            framerate_btn = setting_group.TextControl(searchDepth=2,
+                                                      Compare=ControlFinder.desc_matcher("FrameRateInput"))
             if not framerate_btn.Exists(0.5):
                 raise AutomationError("未找到导出帧率下拉框")
             framerate_btn.Click(simulateMove=False)
@@ -152,7 +165,6 @@ class Jianying_controller:
                 raise AutomationError(f"未找到{framerate.value}帧率选项")
             framerate_item.Click(simulateMove=False)
             time.sleep(0.5)
-
 
         # 点击导出
         export_btn = self.app.TextControl(searchDepth=2, Compare=ControlFinder.desc_matcher("ExportOkBtn", exact=True))
@@ -167,7 +179,8 @@ class Jianying_controller:
             self.get_window()
             if self.app_status != "pre_export": continue
 
-            succeed_close_btn = self.app.TextControl(searchDepth=2, Compare=ControlFinder.desc_matcher("ExportSucceedCloseBtn"))
+            succeed_close_btn = self.app.TextControl(searchDepth=2,
+                                                     Compare=ControlFinder.desc_matcher("ExportSucceedCloseBtn"))
             if succeed_close_btn.Exists(0):
                 succeed_close_btn.Click(simulateMove=False)
                 break
@@ -189,18 +202,27 @@ class Jianying_controller:
 
         print(f"导出 {draft_name} 至 {output_path} 完成")
 
-    def export_draft_in_thread(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200):
-        """在新线程中导出指定的剪映草稿"""
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(self.export_draft, draft_name, output_dir, timeout)
-            try:
-                # 等待任务完成并获取结果
-                future.result()
-                return True
-            except Exception as e:
-                print(f"在 export_draft 中捕获到异常: {e}")
+    def export_draft_in_thread(self, draft_name: str, output_path: Optional[str] = None, timeout: float = 1200) -> bool:
+        """在线程中导出指定的剪映草稿"""
+        try:
+            with uia.UIAutomationInitializerInThread(debug=True):
+                self.export_draft(draft_name=draft_name, output_path=output_path, timeout=timeout)
+            return True
+        except Exception as e:
+            print(f"在 export_draft_in_thread 中捕获到异常: {e}")
             return False
 
+    # def export_draft_in_thread(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200):
+    #     """在新线程中导出指定的剪映草稿"""
+    #     with concurrent.futures.ThreadPoolExecutor() as executor:
+    #         future = executor.submit(self.export_draft, draft_name, output_dir, timeout)
+    #         try:
+    #             # 等待任务完成并获取结果
+    #             future.result()
+    #             return True
+    #         except Exception as e:
+    #             print(f"在 export_draft 中捕获到异常: {e}")
+    #         return False
 
     def switch_to_home(self) -> None:
         """切换到剪映主页"""
