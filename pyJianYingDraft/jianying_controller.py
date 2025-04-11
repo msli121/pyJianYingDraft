@@ -1,11 +1,10 @@
 """剪映自动化控制，主要与自动导出有关"""
-import concurrent.futures
-import time
 import shutil
-import uiautomation as uia
-
+import time
 from enum import Enum
 from typing import Optional, Literal, Callable
+
+import uiautomation as uia
 
 from . import exceptions
 from .exceptions import AutomationError
@@ -104,7 +103,7 @@ class Jianying_controller:
         draft_btn = draft_name_text.GetParentControl()
         assert draft_btn is not None
         draft_btn.Click(simulateMove=False)
-        time.sleep(10)
+        time.sleep(2)
         self.get_window()
 
         # 点击导出按钮
@@ -113,7 +112,7 @@ class Jianying_controller:
         if not export_btn.Exists(0):
             raise AutomationError("未在编辑窗口中找到导出按钮")
         export_btn.Click(simulateMove=False)
-        time.sleep(10)
+        time.sleep(2)
         self.get_window()
 
         # 获取原始导出路径（带后缀名）
@@ -171,7 +170,7 @@ class Jianying_controller:
         if not export_btn.Exists(0):
             raise AutomationError("未在导出窗口中找到导出按钮")
         export_btn.Click(simulateMove=False)
-        time.sleep(5)
+        time.sleep(2)
 
         # 等待导出完成
         st = time.time()
