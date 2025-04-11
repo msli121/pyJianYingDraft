@@ -64,5 +64,5 @@ def setup_logging(app):
 
     # 设置第三方日志级别
     logging.getLogger('apscheduler').setLevel(logging.WARNING) # apscheduler
-    logging.getLogger('werkzeug').setLevel(logging.WARNING)  # Flask 开发服务器日志
+    logging.getLogger('werkzeug').setLevel(logging.INFO)  # Flask 开发服务器日志
     logging.getLogger('urllib3').setLevel(logging.WARNING)  # requests/urllib3 日志
