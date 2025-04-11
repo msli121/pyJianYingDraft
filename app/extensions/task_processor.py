@@ -17,7 +17,8 @@ def register_scheduled_jobs():
         func=check_timeout_tasks,
         trigger='interval',
         minutes=1,
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1,
     )
 
     # 处理下一个任务
@@ -26,7 +27,8 @@ def register_scheduled_jobs():
         func=process_next_task,
         trigger='interval',
         seconds=5,
-        replace_existing=True
+        replace_existing=False,
+        max_instances=1,
     )
     logger.info("定时任务已注册")
 
