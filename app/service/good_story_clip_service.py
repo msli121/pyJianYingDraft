@@ -189,9 +189,8 @@ class GoodStoryClipService:
         if not os.path.exists(GOOD_STORY_CLIP_DRAFT_FILE):
             raise Exception(f"好人好事故事片段草稿文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
         video_save_path = os.path.join(LOCAL_GOOD_STORY_MATERIAL_DATA_DIR, "clips",
-                                       f"{story_id}_{get_current_datetime_str_}.mp4")
+                                       f"{story_id}_{get_current_datetime_str_()}.mp4")
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
-        # 此前需要将剪映打开，并位于目录页
         ctrl = draft.Jianying_controller()
         export_success = ctrl.export_draft_in_thread(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
         if not export_success:
