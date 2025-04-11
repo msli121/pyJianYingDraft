@@ -58,12 +58,16 @@ class GoodStoryClipService:
                         filename = os.path.basename(process_url(segment.url))
                     local_file_path = os.path.join(LOCAL_GOOD_STORY_MATERIAL_DATA_DIR, str(story_id), filename)
                     if not os.path.exists(local_file_path):
+                        os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
                         if download_by_url_to_local(segment.url, local_file_path):
                             segment.local_file_path = local_file_path
-                            logger.info(f"[下载故事素材成功] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
+                            logger.info(
+                                f"[下载故事素材成功] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
                         else:
-                            logger.error(f"[下载故事素材失败] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
+                            raise Exception(
+                                f"[下载故事素材失败] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
                     else:
+                        segment.local_file_path = local_file_path
                         logger.info(f"[故事素材已存在] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
 
     @staticmethod
@@ -83,8 +87,10 @@ class GoodStoryClipService:
         # 字体
         font = draft.Font_type.抖音美好体
         # font = draft.Font_type.新青年体
-        # 字体颜色 暖色调的橙黄色
-        text_style = draft.Text_style(color=(0.9, 0.9, 0.8), size=14, align=1, bold=True)
+        # 标题字体颜色 暖色调的橙黄色
+        title_text_style = draft.Text_style(color=(0.9, 0.9, 0.8), size=20, align=1, bold=True)
+        # 字幕字体配置
+        subtitle_text_style = draft.Text_style(size=16, align=1, bold=True)
         # 文案相对中间区域的偏移
         transform_y = -0.5
         # 创建剪映草稿
@@ -105,15 +111,17 @@ class GoodStoryClipService:
                 script.add_track(track_type=draft.Track_type.audio, track_name=track_name, mute=track_mute)
             elif track_type == BizPlatformTrackTypeEnum.TEXT.value:
                 # 添加文本轨道
-                script.add_track(track_type=draft.Track_type.text, track_name=track_name, mute=track_mute)
+                script.add_track(track_type=draft.Track_type.text, track_name=track_name)
             else:
                 raise Exception(f"不支持的轨道类型：{track_type}")
             # 添加轨道素材
             for segment in track.segments:
-                if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                if not segment.type:
                     continue
                 segment_type = segment.type
                 if segment_type == BizPlatformSegmentTypeEnum.VIDEO.value or segment_type == BizPlatformSegmentTypeEnum.IMAGE.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     video_material = draft.Video_material(segment.local_file_path)
                     video_segment = draft.Video_segment(video_material, trange(segment.start_time_ms * 1000,
                                                                                segment.duration_ms * 1000))
@@ -126,32 +134,48 @@ class GoodStoryClipService:
                     # 添加到视频轨道
                     script.add_segment(video_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.AUDIO.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     segment_volume = segment.volume or 0.6
                     audio_material = draft.Audio_material(segment.local_file_path)
+                    duration_time = min(segment.duration_ms * 1000, audio_material.duration)
                     audio_segment = draft.Audio_segment(audio_material,
                                                         trange(segment.start_time_ms * 1000,
-                                                               segment.duration_ms * 1000),
+                                                               duration_time),
                                                         volume=segment_volume
                                                         )
                     # 增加一个1s的淡入和淡出
                     audio_segment.add_fade("1s", "1s")
                     # 添加到音频轨道
                     script.add_segment(audio_segment, track_name)
+                elif segment_type == BizPlatformSegmentTypeEnum.TEXT.value:
+                    if not segment.text:
+                        raise Exception(f"素材文本不存在")
+                    text_segment = draft.Text_segment(
+                        segment.text, trange(segment.start_time_ms * 1000,
+                                             segment.duration_ms * 1000),
+                        font=font,
+                        style=title_text_style,  # 字体颜色为黄色
+                        clip_settings=draft.Clip_settings(transform_y=0.8)  # 位置在屏幕上方
+                    )
+                    text_segment.add_effect("7403943938391887138")
+                    script.add_segment(text_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.SUBTITLE.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     # 参考的文字样式
                     style_reference = draft.Text_segment("", trange("0s", "10s"),
                                                          font=font,
-                                                         style=text_style,
+                                                         style=subtitle_text_style,
                                                          clip_settings=Clip_settings(transform_y=transform_y))
-                    style_reference.add_bubble("361595",
-                                               "6742029398926430728")  # 添加文本气泡效果, 相应素材元数据的获取参见readme中"提取素材元数据"部分
-                    style_reference.add_effect("7296357486490144036")
+                    style_reference.add_bubble("532597",
+                                               "6797267554562740743")  # 添加文本气泡效果, 相应素材元数据的获取参见readme中"提取素材元数据"部分
+                    style_reference.add_effect("7212892034623950141")
                     script.import_srt(segment.local_file_path,
                                       track_name=track_name,
                                       time_offset=segment.start_time_ms * 1000,
                                       style_reference=style_reference,
                                       )
-
         # 保存草稿
         script.dump(os.path.join(GOOD_STORY_CLIP_DRAFT_FILE, 'draft_content.json'))
 

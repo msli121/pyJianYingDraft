@@ -370,7 +370,7 @@ def get_local_ip():
 def download_by_url_to_local(url, save_path):
     """下载地址内容到本地指定位置"""
     try:
-        response = requests.get(url, stream=True, timeout=10)
+        response = requests.get(url, stream=True, timeout=300)
         response.raise_for_status()
 
         with open(save_path, 'wb') as f:
