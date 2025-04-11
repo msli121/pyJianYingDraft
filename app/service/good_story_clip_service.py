@@ -48,7 +48,7 @@ class GoodStoryClipService:
         if req_data is None:
             raise Exception("素材数据不能为空")
         story_id = req_data.story_id
-        story_name = req_data.gstory_name
+        story_name = req_data.story_name
         logger.info(f"[开始下载故事素材] 故事ID：{story_id}, 故事名称：{story_name}")
         for track in req_data.tracks:
             for segment in track.segments:
@@ -58,21 +58,25 @@ class GoodStoryClipService:
                         filename = os.path.basename(process_url(segment.url))
                     local_file_path = os.path.join(LOCAL_GOOD_STORY_MATERIAL_DATA_DIR, str(story_id), filename)
                     if not os.path.exists(local_file_path):
-                        download_by_url_to_local(segment.url, local_file_path)
-                    segment.local_file_path = local_file_path
-        logger.info(f"[故事素材下载完成] 故事ID：{story_id}, 故事名称：{story_name}")
+                        if download_by_url_to_local(segment.url, local_file_path):
+                            segment.local_file_path = local_file_path
+                            logger.info(f"[下载故事素材成功] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
+                        else:
+                            logger.error(f"[下载故事素材失败] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
+                    else:
+                        logger.info(f"[故事素材已存在] 故事ID：{story_id}, 故事名称：{story_name}, 素材URL：{segment.url}")
 
     @staticmethod
     def cut_good_story_clip(req_data: GoodStoryClipReqInfo):
         """自动裁剪故事片段"""
         if req_data is None:
             raise Exception("素材数据不能为空")
-        if not os.path.exists(GOOD_STORY_CLIP_DRAFT_FILE):
-            raise Exception(f"故事片段模版文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
+        if not os.path.isdir(GOOD_STORY_CLIP_DRAFT_FILE):
+            raise Exception(f"故事片段模版 文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
         if not req_data.tracks or len(req_data.tracks) == 0:
             raise Exception("轨道信息不能为空")
         story_id = req_data.story_id
-        story_name = req_data.gstory_name
+        story_name = req_data.story_name
         logger.info(f"[开始自动裁剪故事片段] 故事ID：{story_id}, 故事名称：{story_name}")
 
         #################### 调整配置的核心区域 #############################

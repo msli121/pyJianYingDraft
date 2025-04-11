@@ -14,6 +14,8 @@ import socket
 import requests
 from PIL import Image
 
+logger = logging.getLogger(__name__)
+
 
 def is_video_url(url_or_path):
     """
@@ -376,7 +378,7 @@ def download_by_url_to_local(url, save_path):
                 f.write(chunk)
         return True
     except Exception as e:
-        print(f"图片下载失败: {str(e)}")
+        logger.error(f"文件下载失败: {str(e)}")
         return False
 
 
