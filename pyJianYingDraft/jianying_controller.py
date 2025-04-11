@@ -69,7 +69,7 @@ class Jianying_controller:
 
     def __init__(self):
         """初始化剪映控制器, 此时剪映应该处于目录页"""
-        self.get_window()
+        # self.get_window()
 
     def export_draft(self, draft_name: str, output_path: Optional[str] = None, *,
                      resolution: Optional[Export_resolution] = None,
