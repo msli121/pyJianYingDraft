@@ -49,6 +49,7 @@ class TaskService:
             task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1, 1, filters=filters,
                                                                                          orders=orders)
             if task_count == 0:
+                # logger.info(f"没有待执行的任务")
                 return None
 
             task = task_infos[0]

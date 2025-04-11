@@ -1,13 +1,9 @@
 import logging
 
-from flask import current_app
-from flask_apscheduler import APScheduler
-
+from app import scheduler
 from app.service.task_service import TaskService
 
 logger = logging.getLogger(__name__)
-
-scheduler = APScheduler()
 
 
 def register_scheduled_jobs():
