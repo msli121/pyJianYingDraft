@@ -135,3 +135,14 @@ class TaskService:
             task_message=message,
             end_time=datetime.now()
         )
+
+    @staticmethod
+    def success_task(task_id: int, task_result: str = ""):
+        """标记任务为成功状态"""
+        BizPlatformJyTask.update(
+            id=task_id,
+            task_status=BizPlatformTaskStatusEnum.DoneSuccess.value,
+            task_message=BizPlatformTaskStatusEnum.DoneSuccess.desc,
+            task_result=task_result,
+            end_time=datetime.now()
+        )
