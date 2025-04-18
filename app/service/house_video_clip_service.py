@@ -176,9 +176,19 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
         # 处理字幕素材
         srt_local_path = clip.get('srt_local_path')
         if os.path.exists(srt_local_path):
-            script.import_srt(srt_local_path, track_name=subtitle_track_name, time_offset=time_offset,
-                              text_style=text_style, clip_settings=Clip_settings(transform_y=transform_y),
-                              font=font)
+            # 参考的文字样式
+            style_reference = draft.Text_segment("", trange("0s", "10s"),
+                                                 font=font,
+                                                 style=text_style,
+                                                 clip_settings=Clip_settings(transform_y=transform_y))
+            style_reference.add_bubble("532597",
+                                       "6797267554562740743")  # 添加文本气泡效果, 相应素材元数据的获取参见readme中"提取素材元数据"部分
+            style_reference.add_effect("7212892034623950141")
+            script.import_srt(srt_local_path,
+                              track_name=subtitle_track_name,
+                              time_offset=time_offset,
+                              style_reference=style_reference,
+                              )
         # 更新下一个片段的起始时间
         time_offset += clip_duration
 
@@ -213,8 +223,6 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
 def jy_auto_export_video(jy_draft_name, video_save_path):
     # 此前需要将剪映打开，并位于目录页
     ctrl = draft.Jianying_controller()
-    # thread = ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
-    # thread.join()
     return ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
 
 

@@ -63,7 +63,7 @@ def query_jy_task_info():
 
 
 @api_blueprint.route('/api/ai-clip/clip-house-video', methods=['POST'])
-def jy_auto_cut_house_video_route():
+def auto_cut_house_video_route():
     """剪映自动裁剪"""
     try:
         data = request.get_json(silent=True) or {}
@@ -78,12 +78,12 @@ def jy_auto_cut_house_video_route():
         return jsonify({"code": 1, "msg": str(e), "data": None}), 200
 
 
-@api_blueprint.route('/api/ai-clip/clip-house-video/sync', methods=['POST'])
-def sync_jy_auto_cut_house_video_route():
+@api_blueprint.route('/api/ai-clip/async-clip-house-video', methods=['POST'])
+def async_auto_cut_house_video_route():
     """异步自动裁剪房源视频"""
     try:
         data = request.get_json(silent=True) or {}
-        logger.info("[异步自动裁剪房源视频] request data: %s", json.dumps(data, ensure_ascii=False))
+        logger.info("[自动裁剪房源视频] request data: %s", json.dumps(data, ensure_ascii=False))
         task_id = data.get('task_id')
         house_no = data.get("house_no")
         video_script_url = data.get("video_script_url")
@@ -110,35 +110,6 @@ def sync_jy_auto_cut_house_video_route():
         return jsonify({"code": 1, "msg": str(e), "data": None}), 200
 
 
-@api_blueprint.route('/api/ai-clip/good-story-clip/sync', methods=['POST'])
-def sync_good_story_clip_route():
-    """异步自动剪辑好事故事片段"""
-    try:
-        data = request.get_json(silent=True) or {}
-        logger.info("[异步自动剪辑好事故事片段] request data: %s", json.dumps(data, ensure_ascii=False))
-        story_id = data.get('story_id')
-        tracks = data.get("tracks")
-        if not story_id:
-            raise ValueError("缺少故事ID")
-        if not tracks or len(tracks) == 0:
-            raise ValueError("缺少轨道信息")
-        jy_task_info = BizPlatformJyTask.create(
-            task_name=f"{BizPlatformJyTaskTypeEnum.GoodStoryClip.desc}_{story_id}",
-            task_type=BizPlatformJyTaskTypeEnum.GoodStoryClip.value,
-            task_param=json.dumps(data, ensure_ascii=False),
-            task_status=BizPlatformTaskStatusEnum.Pending.value,
-            task_priority=BizPlatformTaskPriorityEnum.GoodStoryClip.value,
-        )
-        res = {
-            "jy_task_id": jy_task_info.get('id'),
-            "task_status": BizPlatformTaskStatusEnum.Pending.desc
-        }
-        return jsonify(success_response(res)), 200
-    except Exception as e:
-        logger.error("[异步自动剪辑好事故事片段] Error: %s", str(e), exc_info=True)
-        return jsonify({"code": 1, "msg": str(e), "data": None}), 200
-
-
 @api_blueprint.route('/api/ai-clip/good-story-clip', methods=['POST'])
 def good_story_clip_route():
     """同步自动剪辑好事故事片段"""
@@ -152,17 +123,42 @@ def good_story_clip_route():
         if not tracks or len(tracks) == 0:
             raise ValueError("缺少轨道信息")
         req_data = GoodStoryClipReqInfo.from_dict(data)
-        # 下载素材
-        GoodStoryClipService.download_good_story_material(req_data)
-        # 剪辑
-        GoodStoryClipService.cut_good_story_clip(req_data)
-        # 导出
-        local_path = GoodStoryClipService.export_good_story_clip(story_id)
-        # 上传
-        oss_url = GoodStoryClipService.upload_to_oss(local_path)
-        return jsonify(success_response(oss_url)), 200
+        task_output = GoodStoryClipService.generate_good_story_clip_one_step(req_data)
+        if task_output.success:
+            return jsonify(success_response(task_output.text_content)), 200
+        else:
+            return jsonify(error_response(str(task_output.task_message))), 200
     except Exception as e:
         logger.error("[同步自动剪辑好事故事片段] Error: %s", str(e), exc_info=True)
+        return jsonify({"code": 1, "msg": str(e), "data": None}), 200
+
+
+@api_blueprint.route('/api/ai-clip/async-good-story-clip', methods=['POST'])
+def async_good_story_clip_route():
+    """异步自动剪辑好事故事片段"""
+    try:
+        data = request.get_json(silent=True) or {}
+        logger.info("[异步自动剪辑好事故事片段] request data: %s", json.dumps(data, ensure_ascii=False))
+        story_id = data.get('story_id')
+        tracks = data.get("tracks")
+        if not story_id:
+            raise ValueError("缺少故事ID")
+        if not tracks or len(tracks) == 0:
+            raise ValueError("缺少轨道信息")
+        jy_task_info = BizPlatformJyTask.create(
+            task_name=f"{story_id}_{BizPlatformJyTaskTypeEnum.GoodStoryClip.desc}",
+            task_type=BizPlatformJyTaskTypeEnum.GoodStoryClip.value,
+            task_param=json.dumps(data, ensure_ascii=False),
+            task_status=BizPlatformTaskStatusEnum.Pending.value,
+            task_priority=BizPlatformTaskPriorityEnum.GoodStoryClip.value,
+        )
+        res = {
+            "jy_task_id": jy_task_info.get('id'),
+            "task_status": BizPlatformTaskStatusEnum.Pending.desc
+        }
+        return jsonify(success_response(res)), 200
+    except Exception as e:
+        logger.error("[异步自动剪辑好事故事片段] Error: %s", str(e), exc_info=True)
         return jsonify({"code": 1, "msg": str(e), "data": None}), 200
 
 

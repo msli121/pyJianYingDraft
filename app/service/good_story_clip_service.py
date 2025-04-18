@@ -12,8 +12,8 @@ import os
 import random
 
 import pyJianYingDraft as draft
-from app.entity.jy_task import GoodStoryClipReqInfo
-from app.enum.biz import BizPlatformTrackTypeEnum, BizPlatformSegmentTypeEnum
+from app.entity.jy_task import GoodStoryClipReqInfo, JyTaskOutputInfo
+from app.enum.biz import BizPlatformTrackTypeEnum, BizPlatformSegmentTypeEnum, BizPlatformTaskStatusEnum
 from app_config import AppConfig, BASE_DIR
 from pyJianYingDraft import trange, Clip_settings, Intro_type, Transition_type
 from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local
@@ -41,6 +41,33 @@ BGM_VOLUME_MAP = {
 
 
 class GoodStoryClipService:
+
+    @staticmethod
+    def generate_good_story_clip_one_step(req_data: GoodStoryClipReqInfo):
+        """
+        一步到位生成好人好事视频片段
+        """
+        output_info = JyTaskOutputInfo()
+        try:
+            # 下载素材
+            GoodStoryClipService.download_good_story_material(req_data)
+            # 剪辑
+            GoodStoryClipService.cut_good_story_clip(req_data)
+            # 导出
+            local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
+            # 上传
+            oss_url = GoodStoryClipService.upload_to_oss(local_path)
+            output_info.success = True
+            output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
+            output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
+            output_info.text_content = oss_url
+            return output_info
+        except Exception as e:
+            logger.error(f"生成好人好事视频片段失败：{e}", exc_info=True)
+            output_info.success = False
+            output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
+            output_info.task_message = str(e)
+            return output_info
 
     @staticmethod
     def download_good_story_material(req_data: GoodStoryClipReqInfo):

@@ -1,4 +1,5 @@
 # app/service/task_service.py
+import json
 import logging
 from datetime import datetime, timedelta
 from typing import Dict
@@ -71,10 +72,11 @@ class TaskService:
         """处理单个任务"""
         task_id = task.get('id')
         try:
+            # 标记任务正在执行
             cls.mark_task_doing(task_id)
 
             task_type = task.get('task_type')
-            task_param = task.get('task_param', {})
+            task_param = json.loads(task.get('task_param'))
 
             if task_type == BizPlatformJyTaskTypeEnum.HouseVideoClip.value:
                 return cls._process_house_video_task(task_id, task_param)
@@ -82,19 +84,20 @@ class TaskService:
                 return cls._process_good_story_clip_task(task_id, task_param)
             raise ValueError(f"不支持的任务类型: {task_type}")
         except Exception as e:
-            logger.error(f"任务处理失败 task_id: {task_id}", exc_info=True)
+            logger.error(f"任务处理失败 task_id:{task_id}, error:{str(e)}", exc_info=True)
             cls.fail_task(task_id, str(e))
             return False
 
     @classmethod
     def _process_house_video_task(cls, task_id: int, task_param: dict):
         """处理房源视频剪辑任务"""
-        output_info = handle_auto_clip_house_video(task_param)
+        task_output = handle_auto_clip_house_video(task_param)
+        # 更新任务状态
         BizPlatformJyTask.update(
             id=task_id,
-            task_status=output_info.task_status,
-            task_message=output_info.task_message,
-            task_result=output_info.text_content,
+            task_status=task_output.task_status,
+            task_message=task_output.task_message,
+            task_result=task_output.text_content,
             end_time=datetime.now()
         )
         return True
@@ -103,20 +106,13 @@ class TaskService:
     def _process_good_story_clip_task(cls, task_id: int, task_param: dict):
         """处理好故事视频剪辑任务"""
         req_data = GoodStoryClipReqInfo.from_dict(task_param)
-        # 下载素材
-        GoodStoryClipService.download_good_story_material(req_data)
-        # 剪辑
-        GoodStoryClipService.cut_good_story_clip(req_data)
-        # 导出
-        local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
-        # 上传
-        oss_url = GoodStoryClipService.upload_to_oss(local_path)
+        task_output = GoodStoryClipService.generate_good_story_clip_one_step(req_data)
         # 更新任务状态
         BizPlatformJyTask.update(
             id=task_id,
-            task_status=BizPlatformTaskStatusEnum.DoneSuccess.value,
-            task_message=BizPlatformTaskStatusEnum.DoneSuccess.desc,
-            task_result=oss_url,
+            task_status=task_output.task_status,
+            task_message=task_output.task_message,
+            task_result=task_output.text_content,
             end_time=datetime.now()
         )
 

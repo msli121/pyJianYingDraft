@@ -211,18 +211,6 @@ class Jianying_controller:
             print(f"在 export_draft_in_thread 中捕获到异常: {e}")
             return False
 
-    # def export_draft_in_thread(self, draft_name: str, output_dir: Optional[str] = None, timeout: float = 1200):
-    #     """在新线程中导出指定的剪映草稿"""
-    #     with concurrent.futures.ThreadPoolExecutor() as executor:
-    #         future = executor.submit(self.export_draft, draft_name, output_dir, timeout)
-    #         try:
-    #             # 等待任务完成并获取结果
-    #             future.result()
-    #             return True
-    #         except Exception as e:
-    #             print(f"在 export_draft 中捕获到异常: {e}")
-    #         return False
-
     def switch_to_home(self) -> None:
         """切换到剪映主页"""
         if self.app_status == "home":
