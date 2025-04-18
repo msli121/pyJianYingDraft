@@ -6,11 +6,11 @@ from typing import Dict
 
 from flask import current_app
 
-from app.controller.auto_clip_controller import handle_auto_clip_house_video
 from app.entity.jy_task import GoodStoryClipReqInfo
 from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum
 from app.models.biz import BizPlatformJyTask
 from app.service.good_story_clip_service import GoodStoryClipService
+from app.service.house_video_clip_service import handle_auto_clip_house_video
 
 logger = logging.getLogger(__name__)
 
