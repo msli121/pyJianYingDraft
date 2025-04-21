@@ -45,7 +45,9 @@ class TaskService:
         """处理下一个待执行任务"""
         try:
             filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value)}
-            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1, 1, filters=filters)
+            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
+                                                                                         1,
+                                                                                         filters=filters)
             if task_count > 0:
                 task_info = task_infos[0]
                 logger.info(f"当前有任务在执行 task_id:{task_info.get('id')}, task_name:{task_info.get('task_name')}")
@@ -55,12 +57,13 @@ class TaskService:
                 {"key": "task_priority", "value": "desc"},
                 {"key": "create_time", "value": "asc"}
             ]
-            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1, 1, filters=filters,
+            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
+                                                                                         1,
+                                                                                         filters=filters,
                                                                                          orders=orders)
             if task_count == 0:
                 # logger.info(f"没有待执行的任务")
                 return None
-
             task = task_infos[0]
             return cls.process_single_task(task)
         except Exception as e:
@@ -123,7 +126,7 @@ class TaskService:
             id=task_id,
             task_status=BizPlatformTaskStatusEnum.Doing.value,
             start_time=datetime.now(),
-            end_time=None
+            end_time=None,
         )
 
     @staticmethod
@@ -133,7 +136,7 @@ class TaskService:
             id=task_id,
             task_status=BizPlatformTaskStatusEnum.DoneFail.value,
             task_message=message,
-            end_time=datetime.now()
+            end_time=datetime.now(),
         )
 
     @staticmethod
@@ -144,5 +147,5 @@ class TaskService:
             task_status=BizPlatformTaskStatusEnum.DoneSuccess.value,
             task_message=BizPlatformTaskStatusEnum.DoneSuccess.desc,
             task_result=task_result,
-            end_time=datetime.now()
+            end_time=datetime.now(),
         )
