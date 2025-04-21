@@ -77,9 +77,14 @@ def auto_cut_house_video_route():
         )
         task_output = handle_auto_clip_house_video(data)
         if task_output.success:
+            # 执行成功
             TaskService.success_task(jy_task_info.get('id'), task_output.text_content)
-            return jsonify(success_response(task_output.text_content)), 200
+            res_data = {
+                "url": task_output.text_content,
+            }
+            return jsonify(success_response(res_data)), 200
         else:
+            # 执行失败
             TaskService.fail_task(jy_task_info.get('id'), task_output.task_message)
             return jsonify(error_response(task_output.task_message)), 200
     except Exception as e:

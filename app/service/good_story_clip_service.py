@@ -5,20 +5,17 @@
 @Author: lms
 @Date: 2025/2/24 19:30
 """
-import glob
-import json
 import logging
 import os
-import random
 
 import pyJianYingDraft as draft
 from app.entity.jy_task import GoodStoryClipReqInfo, JyTaskOutputInfo
 from app.enum.biz import BizPlatformTrackTypeEnum, BizPlatformSegmentTypeEnum, BizPlatformTaskStatusEnum
-from app_config import AppConfig, BASE_DIR
-from pyJianYingDraft import trange, Clip_settings, Intro_type, Transition_type
 from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local
-from app.utils.oss_utils import init_oss, upload_local_file_to_oss, \
+from app.utils.oss_utils import upload_local_file_to_oss, \
     generate_get_url, process_url
+from app_config import BASE_DIR
+from pyJianYingDraft import trange, Clip_settings, Intro_type, Transition_type
 
 logger = logging.getLogger(__name__)
 
