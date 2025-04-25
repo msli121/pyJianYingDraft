@@ -50,14 +50,14 @@ class GoodStoryClipService:
             GoodStoryClipService.download_good_story_material(req_data)
             # 剪辑
             GoodStoryClipService.cut_good_story_clip(req_data)
-            # # 导出
-            # local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
-            # # 上传
-            # oss_url = GoodStoryClipService.upload_to_oss(local_path)
-            # output_info.success = True
-            # output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
-            # output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
-            # output_info.text_content = oss_url
+            # 导出
+            local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
+            # 上传
+            oss_url = GoodStoryClipService.upload_to_oss(local_path)
+            output_info.success = True
+            output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
+            output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
+            output_info.text_content = oss_url
             return output_info
         except Exception as e:
             logger.error(f"生成好人好事视频片段失败：{e}", exc_info=True)
