@@ -25,7 +25,7 @@ OSS_VIDEO_MAKING_PATH_PREFIX = 'video-making/data/good_story'  # OSS数据存放
 OSS_VIDEO_MAKING_BGM_PATH_PREFIX = 'video-making/bgm'  # OSS的视频剪辑背景音乐存放前缀
 
 # 好人好事草稿名：故事片段模版
-GOOD_STORY_CLIP_DRAFT_NAME = '故事片段模版'
+GOOD_STORY_CLIP_DRAFT_NAME = '好人好事模版1'
 GOOD_STORY_CLIP_DRAFT_FILE = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", GOOD_STORY_CLIP_DRAFT_NAME)
 
 BGM_VOLUME_MAP = {
