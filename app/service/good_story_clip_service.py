@@ -249,7 +249,8 @@ class GoodStoryClipService:
                                       track_name=track_name,
                                       time_offset=segment.start_time_ms * 1000,
                                       text_style=subtitle_text_style,
-                                      clip_settings=draft.Clip_settings(transform_y=-0.5)
+                                      clip_settings=draft.Clip_settings(transform_y=-0.5),
+                                      border=draft.Text_border(),  # 默认黑色描边
                                       )
         # 保存草稿
         script.dump(os.path.join(GOOD_STORY_CLIP_DRAFT_FILE, 'draft_content.json'))

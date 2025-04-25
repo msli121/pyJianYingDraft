@@ -16,7 +16,7 @@ from .segment import Base_segment, Speed, Clip_settings
 from .audio_segment import Audio_segment, Audio_fade, Audio_effect
 from .video_segment import Video_segment, Sticker_segment, Segment_animations, Video_effect, Transition, Filter
 from .effect_segment import Effect_segment, Filter_segment
-from .text_segment import Text_segment, Text_style, TextBubble
+from .text_segment import Text_segment, Text_style, TextBubble, Text_border
 from .track import Track_type, Base_track, Track
 
 from .metadata import Video_scene_effect_type, Video_character_effect_type, Filter_type
@@ -410,6 +410,7 @@ class Script_file:
                    time_offset: Union[str, float] = 0.0,
                    style_reference: Optional[Text_segment] = None,
                    text_style: Text_style = Text_style(size=5, align=1),
+                   border: Optional[Text_border] = None,
                    clip_settings: Optional[Clip_settings] = Clip_settings(transform_y=-0.8)) -> "Script_file":
         """从SRT文件中导入字幕, 支持传入一个`Text_segment`作为样式参考
 
@@ -421,6 +422,7 @@ class Script_file:
             style_reference (`Text_segment`, optional): 作为样式参考的文本片段, 若提供则使用其样式.
             time_offset (`Union[str, float]`, optional): 字幕整体时间偏移, 单位为微秒, 默认为0.
             text_style (`Text_style`, optional): 字幕样式, 默认模仿剪映导入字幕时的样式, 会被`style_reference`覆盖.
+            border (`Text_border`, optional): 文本描边参数, 默认无描边
             clip_settings (`Clip_settings`, optional): 图像调节设置, 默认模仿剪映导入字幕时的设置, 会覆盖`style_reference`的设置除非指定为`None`.
 
         Raises:
@@ -443,7 +445,7 @@ class Script_file:
                 if clip_settings is not None:
                     seg.clip_settings = deepcopy(clip_settings)
             else:
-                seg = Text_segment(text, t_range, style=text_style, clip_settings=clip_settings)
+                seg = Text_segment(text, t_range, style=text_style, clip_settings=clip_settings, border=border)
             self.add_segment(seg, track_name)
 
         index = 0
