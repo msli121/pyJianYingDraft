@@ -130,6 +130,9 @@ class GoodStoryClipService:
             if track_type == BizPlatformTrackTypeEnum.VIDEO.value:
                 # 添加视频轨道
                 script.add_track(track_type=draft.Track_type.video, track_name=track_name, mute=track_mute)
+            elif track_type == BizPlatformTrackTypeEnum.IMAGE.value:
+                # 添加图片轨道
+                script.add_track(track_type=draft.Track_type.video, track_name=track_name, mute=track_mute)
             elif track_type == BizPlatformTrackTypeEnum.AUDIO.value:
                 # 添加音频轨道
                 script.add_track(track_type=draft.Track_type.audio, track_name=track_name, mute=track_mute)
@@ -141,9 +144,10 @@ class GoodStoryClipService:
             # 添加轨道素材
             for segment in track.segments:
                 if not segment.type:
+                    logger.error(f"轨道素材类型不能为空：{segment}")
                     continue
                 segment_type = segment.type
-                if segment_type == BizPlatformSegmentTypeEnum.VIDEO.value or segment_type == BizPlatformSegmentTypeEnum.IMAGE.value:
+                if segment_type == BizPlatformSegmentTypeEnum.VIDEO.value:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     video_material = draft.Video_material(segment.local_file_path)
@@ -156,6 +160,36 @@ class GoodStoryClipService:
                     if segment.has_transition:
                         video_segment.add_transition(Transition_type.风车)
                     # 添加到视频轨道
+                    script.add_segment(video_segment, track_name)
+                elif segment_type == BizPlatformSegmentTypeEnum.IMAGE.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
+                    video_material = draft.Video_material(segment.local_file_path)
+                    video_segment = draft.Video_segment(video_material, trange(segment.start_time_ms * 1000,
+                                                                               segment.duration_ms * 1000))
+                    # 添加一个入场动画
+                    if segment.has_entry_animation:
+                        video_segment.add_animation(Intro_type.斜切)
+                    # 添加一个转场类型
+                    if segment.has_transition:
+                        video_segment.add_transition(Transition_type.风车)
+                    # 添加布局设置
+                    if segment.clip_settings:
+                        clip_settings = Clip_settings()
+                        if segment.clip_settings.transform_x is not None:
+                            clip_settings.transform_x = segment.clip_settings.transform_x
+                        if segment.clip_settings.transform_y is not None:
+                            clip_settings.transform_y = segment.clip_settings.transform_y
+                        if segment.clip_settings.scale_x is not None:
+                            clip_settings.scale_x = segment.clip_settings.scale_x
+                        if segment.clip_settings.scale_y is not None:
+                            clip_settings.scale_y = segment.clip_settings.scale_y
+                        if segment.clip_settings.rotation is not None:
+                            clip_settings.rotation = segment.clip_settings.rotation
+                        if segment.clip_settings.alpha is not None:
+                            clip_settings.alpha = segment.clip_settings.alpha
+                        video_segment.clip_settings = clip_settings
+                    # 添加轨道
                     script.add_segment(video_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.AUDIO.value:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):

@@ -36,6 +36,46 @@ class JyTaskOutputInfo(BaseModel):
         return cls(**data)
 
 
+
+class ClipSettings(BaseModel):
+    """素材片段的图像调节设置"""
+    alpha: Optional[float] = None
+    """图像不透明度, 0-1"""
+    flip_horizontal: Optional[bool] = None
+    """是否水平翻转"""
+    flip_vertical: Optional[bool] = None
+    """顺时针旋转的**角度**, 可正可负. 默认为0.0."""
+    rotation: Optional[float] = None
+    """顺时针旋转的**角度**, 可正可负"""
+    scale_x: Optional[float] = None
+    """水平缩放比例"""
+    scale_y: Optional[float] = None
+    """垂直缩放比例"""
+    transform_x: Optional[float] = None
+    """水平位移, 单位为半个画布宽"""
+    transform_y: Optional[float] = None
+    """垂直位移, 单位为半个画布高"""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "alpha": self.alpha,
+            "flip_horizontal": self.flip_horizontal,
+            "flip_vertical": self.flip_vertical,
+            "rotation": self.rotation,
+            "scale_x": self.scale_x,
+            "scale_y": self.scale_y,
+            "transform_x": self.transform_x,
+            "transform_y": self.transform_y
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]):
+        """
+        从字典初始化 GoodStorySegmentInfo 对象
+        """
+        return cls(**data)
+
+
 class GoodStorySegmentInfo(BaseModel):
     """
     好故事剪辑片段信息
@@ -52,12 +92,13 @@ class GoodStorySegmentInfo(BaseModel):
     has_transition: Optional[bool] = False  # 是否有转场
     transition_type: Optional[str] = None  # 转场类型
     volume: Optional[float] = None  # 音量
+    clip_settings: Optional[ClipSettings] = None  # 剪辑设置
 
     def to_dict(self) -> Dict[str, Any]:
         """
         将实例属性转换为字典形式。
         """
-        return {
+        data = {
             "type": self.type,
             "text": self.text,
             "url": self.url,
@@ -69,8 +110,11 @@ class GoodStorySegmentInfo(BaseModel):
             "entry_animation_type": self.entry_animation_type,
             "has_transition": self.has_transition,
             "transition_type": self.transition_type,
-            "volume": self.volume
+            "volume": self.volume,
         }
+        if self.clip_settings:
+            data["clip_settings"] = self.clip_settings.to_dict()  # 调用 clip_settings 的 to_dict
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
@@ -80,7 +124,10 @@ class GoodStorySegmentInfo(BaseModel):
         # 确保数据中的布尔值和浮点数类型正确
         data["has_entry_animation"] = bool(data.get("has_entry_animation", False))
         data["has_transition"] = bool(data.get("has_transition", False))
-        # data["volume"] = float(data.get("volume", 0.6))
+
+        # 手动处理 clip_settings 反序列化
+        if data.get("clip_settings"):
+            data["clip_settings"] = ClipSettings.from_dict(data["clip_settings"])
 
         return cls(**data)
 
@@ -104,7 +151,7 @@ class GoodStoryTrackInfo(BaseModel):
             "track_name": self.track_name,
             "track_show": self.track_show,
             "track_mute": self.track_mute,
-            "segments": [segment.to_dict() for segment in self.segments] if self.segments else None,
+            "segments": [segment.to_dict() for segment in self.segments] if self.segments else [],
         }
 
     @classmethod
@@ -134,7 +181,7 @@ class GoodStoryClipReqInfo(BaseModel):
             "story_id": self.story_id,
             "story_name": self.story_name,
             "story_duration_ms": self.story_duration_ms,
-            "tracks": [track.to_dict() for track in self.tracks] if self.tracks else None,
+            "tracks": [track.to_dict() for track in self.tracks] if self.tracks else [],
         }
 
     @classmethod
