@@ -24,7 +24,7 @@ LOCAL_GOOD_STORY_MATERIAL_BGM_DIR = os.path.join(BASE_DIR, 'app', 'video_making'
 OSS_VIDEO_MAKING_PATH_PREFIX = 'video-making/data/good_story'  # OSS数据存放前缀
 OSS_VIDEO_MAKING_BGM_PATH_PREFIX = 'video-making/bgm'  # OSS的视频剪辑背景音乐存放前缀
 
-# 好人好事草稿名：故事片段模版
+# 好人好事草稿名
 GOOD_STORY_CLIP_DRAFT_NAME = '好人好事模版1'
 GOOD_STORY_CLIP_DRAFT_FILE = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", GOOD_STORY_CLIP_DRAFT_NAME)
 
@@ -50,14 +50,14 @@ class GoodStoryClipService:
             GoodStoryClipService.download_good_story_material(req_data)
             # 剪辑
             GoodStoryClipService.cut_good_story_clip(req_data)
-            # 导出
-            local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
-            # 上传
-            oss_url = GoodStoryClipService.upload_to_oss(local_path)
-            output_info.success = True
-            output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
-            output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
-            output_info.text_content = oss_url
+            # # 导出
+            # local_path = GoodStoryClipService.export_good_story_clip(req_data.story_id)
+            # # 上传
+            # oss_url = GoodStoryClipService.upload_to_oss(local_path)
+            # output_info.success = True
+            # output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
+            # output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
+            # output_info.text_content = oss_url
             return output_info
         except Exception as e:
             logger.error(f"生成好人好事视频片段失败：{e}", exc_info=True)
@@ -100,7 +100,7 @@ class GoodStoryClipService:
         if req_data is None:
             raise Exception("素材数据不能为空")
         if not os.path.isdir(GOOD_STORY_CLIP_DRAFT_FILE):
-            raise Exception(f"故事片段模版 文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
+            raise Exception(f"文件不存在：{GOOD_STORY_CLIP_DRAFT_FILE}")
         if not req_data.tracks or len(req_data.tracks) == 0:
             raise Exception("轨道信息不能为空")
         story_id = req_data.story_id

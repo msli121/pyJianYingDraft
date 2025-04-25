@@ -95,7 +95,7 @@ class BizPlatformTrackTypeEnum(Enum):
     """轨道类型类型枚举"""
     TEXT = ('text', '文本')
     VIDEO = ('video', '视频')
-    IMAGE = ('image', '视频')
+    IMAGE = ('image', '图片')
     AUDIO = ('audio', '音频')
 
     def __new__(cls, value, desc):
