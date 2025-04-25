@@ -147,6 +147,23 @@ class GoodStoryClipService:
                     logger.error(f"轨道素材类型不能为空：{segment}")
                     continue
                 segment_type = segment.type
+
+                # 添加布局设置
+                clip_settings = draft.Clip_settings()
+                if segment.clip_settings:
+                    if segment.clip_settings.transform_x is not None:
+                        clip_settings.transform_x = segment.clip_settings.transform_x
+                    if segment.clip_settings.transform_y is not None:
+                        clip_settings.transform_y = segment.clip_settings.transform_y
+                    if segment.clip_settings.scale_x is not None:
+                        clip_settings.scale_x = segment.clip_settings.scale_x
+                    if segment.clip_settings.scale_y is not None:
+                        clip_settings.scale_y = segment.clip_settings.scale_y
+                    if segment.clip_settings.rotation is not None:
+                        clip_settings.rotation = segment.clip_settings.rotation
+                    if segment.clip_settings.alpha is not None:
+                        clip_settings.alpha = segment.clip_settings.alpha
+
                 if segment_type == BizPlatformSegmentTypeEnum.VIDEO.value:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
@@ -165,30 +182,16 @@ class GoodStoryClipService:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     video_material = draft.Video_material(segment.local_file_path)
-                    video_segment = draft.Video_segment(video_material, trange(segment.start_time_ms * 1000,
-                                                                               segment.duration_ms * 1000))
+                    video_segment = draft.Video_segment(video_material,
+                                                        trange(segment.start_time_ms * 1000,
+                                                               segment.duration_ms * 1000),
+                                                        clip_settings=clip_settings)
                     # 添加一个入场动画
                     if segment.has_entry_animation:
                         video_segment.add_animation(Intro_type.斜切)
                     # 添加一个转场类型
                     if segment.has_transition:
                         video_segment.add_transition(Transition_type.风车)
-                    # 添加布局设置
-                    if segment.clip_settings:
-                        clip_settings = Clip_settings()
-                        if segment.clip_settings.transform_x is not None:
-                            clip_settings.transform_x = segment.clip_settings.transform_x
-                        if segment.clip_settings.transform_y is not None:
-                            clip_settings.transform_y = segment.clip_settings.transform_y
-                        if segment.clip_settings.scale_x is not None:
-                            clip_settings.scale_x = segment.clip_settings.scale_x
-                        if segment.clip_settings.scale_y is not None:
-                            clip_settings.scale_y = segment.clip_settings.scale_y
-                        if segment.clip_settings.rotation is not None:
-                            clip_settings.rotation = segment.clip_settings.rotation
-                        if segment.clip_settings.alpha is not None:
-                            clip_settings.alpha = segment.clip_settings.alpha
-                        video_segment.clip_settings = clip_settings
                     # 添加轨道
                     script.add_segment(video_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.AUDIO.value:
@@ -210,13 +213,14 @@ class GoodStoryClipService:
                     if not segment.text:
                         raise Exception(f"素材文本不存在")
                     if track_name == '标题':
+                        # 文本片段
                         text_segment = draft.Text_segment(
                             segment.text, trange(segment.start_time_ms * 1000,
                                                  segment.duration_ms * 1000),
                             font=font,
                             style=title_text_style,
-                            clip_settings=draft.Clip_settings(transform_y=0.8),  # 位置在屏幕上方
-                            border=draft.Text_border(color=(0.957, 0.051, 0.051))
+                            clip_settings=clip_settings,  # 位置在屏幕上方
+                            border=draft.Text_border(color=(0.957, 0.051, 0.051)),
                         )
                         script.add_segment(text_segment, track_name)
                     elif track_name == '子标题':
@@ -224,7 +228,7 @@ class GoodStoryClipService:
                             segment.text, trange(segment.start_time_ms * 1000,
                                                  segment.duration_ms * 1000),
                             style=sub_title_text_style,
-                            clip_settings=draft.Clip_settings(transform_y=0.7),  # 位置在屏幕上方
+                            clip_settings=clip_settings,
                             border=draft.Text_border(),  # 默认黑色描边
                         )
                         script.add_segment(text_segment, track_name)
@@ -233,22 +237,14 @@ class GoodStoryClipService:
                             segment.text, trange(segment.start_time_ms * 1000,
                                                  segment.duration_ms * 1000),
                             font=font,
+                            clip_settings=clip_settings,
                             style=title_text_style,  # 字体颜色为黄色
-                            clip_settings=draft.Clip_settings(transform_y=0.8)  # 位置在屏幕上方
                         )
                         text_segment.add_effect("7403943938391887138")
                         script.add_segment(text_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.SUBTITLE.value:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
-                    # # 参考的文字样式
-                    # style_reference = draft.Text_segment("", trange("0s", "10s"),
-                    #                                      font=font,
-                    #                                      style=subtitle_text_style,
-                    #                                      clip_settings=Clip_settings(transform_y=transform_y))
-                    # style_reference.add_bubble("532597",
-                    #                            "6797267554562740743")  # 添加文本气泡效果, 相应素材元数据的获取参见readme中"提取素材元数据"部分
-                    # style_reference.add_effect("7212892034623950141")
                     script.import_srt(segment.local_file_path,
                                       track_name=track_name,
                                       time_offset=segment.start_time_ms * 1000,
