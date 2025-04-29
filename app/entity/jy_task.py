@@ -91,6 +91,8 @@ class GoodStorySegmentInfo(BaseModel):
     entry_animation_type: Optional[str] = None  # 进入动画类型
     has_transition: Optional[bool] = False  # 是否有转场
     transition_type: Optional[str] = None  # 转场类型
+    has_effect: Optional[bool] = False  # 是否有特效
+    effect_type: Optional[str] = None  # 特效类型
     volume: Optional[float] = None  # 音量
     clip_settings: Optional[ClipSettings] = None  # 剪辑设置
 
@@ -110,6 +112,8 @@ class GoodStorySegmentInfo(BaseModel):
             "entry_animation_type": self.entry_animation_type,
             "has_transition": self.has_transition,
             "transition_type": self.transition_type,
+            "has_effect": self.has_effect,
+            "effect_type": self.effect_type,
             "volume": self.volume,
         }
         if self.clip_settings:
@@ -124,6 +128,7 @@ class GoodStorySegmentInfo(BaseModel):
         # 确保数据中的布尔值和浮点数类型正确
         data["has_entry_animation"] = bool(data.get("has_entry_animation", False))
         data["has_transition"] = bool(data.get("has_transition", False))
+        data["has_effect"] = bool(data.get("has_effect", False))
 
         # 手动处理 clip_settings 反序列化
         if data.get("clip_settings"):

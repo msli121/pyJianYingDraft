@@ -7,6 +7,7 @@
 """
 import logging
 import os
+import random
 
 import pyJianYingDraft as draft
 from app.entity.jy_task import GoodStoryClipReqInfo, JyTaskOutputInfo
@@ -35,6 +36,22 @@ BGM_VOLUME_MAP = {
     '残影_-_知我（钢琴版）.mp3': 0.4,
     '赵海洋_-_夜空的寂静_(夜色钢琴曲).mp3': 0.5,
 }
+# 画面特效
+GLOBAL_SCENE_EFFECT = [
+    draft.Video_scene_effect_type.渐渐放大,
+    draft.Video_scene_effect_type.放大镜,
+    draft.Video_scene_effect_type.开幕,
+    draft.Video_scene_effect_type.箭头放大镜,
+    draft.Video_scene_effect_type.云朵绵绵,
+    draft.Video_scene_effect_type.S形运镜,
+    draft.Video_scene_effect_type.丝滑运镜,
+    draft.Video_scene_effect_type.金片,
+    draft.Video_scene_effect_type.金粉,
+    draft.Video_scene_effect_type.金粉_II,
+    draft.Video_scene_effect_type.金粉撒落,
+    draft.Video_scene_effect_type.模糊开幕,
+    draft.Video_scene_effect_type.渐显开幕,
+]
 
 
 class GoodStoryClipService:
@@ -176,6 +193,10 @@ class GoodStoryClipService:
                     # 添加一个转场类型
                     if segment.has_transition:
                         video_segment.add_transition(Transition_type.风车)
+                    # 添加一个画面特效
+                    if segment.has_effect:
+                        scene_effect = random.choice(GLOBAL_SCENE_EFFECT)
+                        video_segment.add_effect(scene_effect)
                     # 添加到视频轨道
                     script.add_segment(video_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.IMAGE.value:
@@ -192,6 +213,10 @@ class GoodStoryClipService:
                     # 添加一个转场类型
                     if segment.has_transition:
                         video_segment.add_transition(Transition_type.风车)
+                    # 添加一个画面特效
+                    if segment.has_effect:
+                        scene_effect = random.choice(GLOBAL_SCENE_EFFECT)
+                        video_segment.add_effect(scene_effect)
                     # 添加轨道
                     script.add_segment(video_segment, track_name)
                 elif segment_type == BizPlatformSegmentTypeEnum.AUDIO.value:
