@@ -69,6 +69,7 @@ class GoodStoryClipService:
         """一步到位生成活动视频片段"""
         output_info = JyTaskOutputInfo()
         try:
+            logger.info(f"一步到位生成活动视频片段：{req_data.activity_name}")
             # 下载素材
             GoodStoryClipService.download_activity_video_material(req_data)
             # 剪辑
@@ -83,7 +84,7 @@ class GoodStoryClipService:
             output_info.text_content = oss_url
             return output_info
         except Exception as e:
-            logger.error(f"生成好人好事视频片段失败：{e}", exc_info=True)
+            logger.error(f"一步到位生成活动视频片段失败：{e}", exc_info=True)
             output_info.success = False
             output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
             output_info.task_message = str(e)
@@ -155,7 +156,7 @@ class GoodStoryClipService:
                                        f"{activity_name}_{get_current_datetime_str_()}.mp4")
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
         ctrl = draft.Jianying_controller()
-        export_success = ctrl.export_draft_in_thread(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
+        export_success = ctrl.export_draft_in_thread(ACTIVITY_VIDEO_DRAFT_NAME, video_save_path)
         if not export_success:
             raise Exception(f"导出失败：{video_save_path}")
         return video_save_path
