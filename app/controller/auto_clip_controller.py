@@ -183,3 +183,64 @@ def async_good_story_clip_route():
     except Exception as e:
         logger.error("[异步执行好人好事片段剪辑] Error: %s", str(e), exc_info=True)
         return jsonify({"code": 1, "msg": str(e), "data": None}), 200
+
+
+@api_blueprint.route('/api/ai-clip/activity-video-clip', methods=['POST'])
+def activity_video_clip_route():
+    """执行活动视频剪辑"""
+    try:
+        data = request.get_json(silent=True) or {}
+        logger.info("[异步执行活动视频剪辑] request data: %s", json.dumps(data, ensure_ascii=False))
+        activity_name = data.get('activity_name')
+        if not activity_name:
+            raise ValueError("缺少活动名")
+        tracks = data.get("tracks")
+        if not tracks or len(tracks) == 0:
+            raise ValueError("缺少轨道信息")
+        jy_task_info = BizPlatformJyTask.create(
+            task_name=f"{activity_name}_{BizPlatformJyTaskTypeEnum.ActivityVideoClip.desc}",
+            task_type=BizPlatformJyTaskTypeEnum.ActivityVideoClip.value,
+            task_param=json.dumps(data, ensure_ascii=False),
+            task_status=BizPlatformTaskStatusEnum.Doing.value,
+            task_priority=BizPlatformTaskPriorityEnum.ActivityVideoClip.value,
+        )
+        req_data = GoodStoryClipReqInfo.from_dict(data)
+        task_output = GoodStoryClipService.generate_activity_video_one_step(req_data)
+        if task_output.success:
+            TaskService.success_task(jy_task_info.get('id'), task_output.text_content)
+            return jsonify(success_response(task_output.text_content)), 200
+        else:
+            TaskService.fail_task(jy_task_info.get('id'), task_output.task_message)
+            return jsonify(error_response(str(task_output.task_message))), 200
+    except Exception as e:
+        logger.error("[执行活动视频剪辑] Error: %s", str(e), exc_info=True)
+        return jsonify({"code": 1, "msg": str(e), "data": None}), 200
+
+
+@api_blueprint.route('/api/ai-clip/async-activity-video-clip', methods=['POST'])
+def async_activity_video_clip_route():
+    """异步执行活动视频剪辑"""
+    try:
+        data = request.get_json(silent=True) or {}
+        logger.info("[异步执行活动视频剪辑] request data: %s", json.dumps(data, ensure_ascii=False))
+        activity_name = data.get('activity_name')
+        if not activity_name:
+            raise ValueError("缺少活动名")
+        tracks = data.get("tracks")
+        if not tracks or len(tracks) == 0:
+            raise ValueError("缺少轨道信息")
+        jy_task_info = BizPlatformJyTask.create(
+            task_name=f"{activity_name}_{BizPlatformJyTaskTypeEnum.ActivityVideoClip.desc}",
+            task_type=BizPlatformJyTaskTypeEnum.ActivityVideoClip.value,
+            task_param=json.dumps(data, ensure_ascii=False),
+            task_status=BizPlatformTaskStatusEnum.Pending.value,
+            task_priority=BizPlatformTaskPriorityEnum.ActivityVideoClip.value,
+        )
+        res = {
+            "jy_task_id": jy_task_info.get('id'),
+            "task_status": BizPlatformTaskStatusEnum.Pending.desc
+        }
+        return jsonify(success_response(res)), 200
+    except Exception as e:
+        logger.error("[异步执行活动视频剪辑] Error: %s", str(e), exc_info=True)
+        return jsonify({"code": 1, "msg": str(e), "data": None}), 200

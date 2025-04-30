@@ -16,18 +16,24 @@ from app.utils.common_utils import get_current_datetime_str_, download_by_url_to
 from app.utils.oss_utils import upload_local_file_to_oss, \
     generate_get_url, process_url
 from app_config import BASE_DIR
-from pyJianYingDraft import trange, Clip_settings, Intro_type, Transition_type
+from pyJianYingDraft import trange, Intro_type, Transition_type
 
 logger = logging.getLogger(__name__)
 
-LOCAL_GOOD_STORY_MATERIAL_DATA_DIR = os.path.join(BASE_DIR, 'app', 'video_making', 'data', 'good_story')
+LOCAL_DATA_DIR = os.path.join(BASE_DIR, 'app', 'video_making', 'data')
+LOCAL_GOOD_STORY_MATERIAL_DATA_DIR = os.path.join(LOCAL_DATA_DIR, 'good_story')
 LOCAL_GOOD_STORY_MATERIAL_BGM_DIR = os.path.join(BASE_DIR, 'app', 'video_making', 'bgm')
-OSS_VIDEO_MAKING_PATH_PREFIX = 'video-making/data/good_story'  # OSS数据存放前缀
+OSS_VIDEO_MAKING_PATH_PREFIX = 'video-making/data'  # OSS数据存放前缀
+OSS_VIDEO_MAKING_GOOD_STORY_PATH_PREFIX = 'video-making/data/good_story'  # OSS数据存放前缀
 OSS_VIDEO_MAKING_BGM_PATH_PREFIX = 'video-making/bgm'  # OSS的视频剪辑背景音乐存放前缀
 
 # 好人好事草稿名
-GOOD_STORY_CLIP_DRAFT_NAME = '好人好事模版1'
+GOOD_STORY_CLIP_DRAFT_NAME = '好人好事片段'
 GOOD_STORY_CLIP_DRAFT_FILE = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", GOOD_STORY_CLIP_DRAFT_NAME)
+
+# 活动视频成片
+ACTIVITY_VIDEO_DRAFT_NAME = '活动视频成片'
+ACTIVITY_VIDEO_DRAFT_FILE = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", ACTIVITY_VIDEO_DRAFT_NAME)
 
 BGM_VOLUME_MAP = {
     'PederB.Helland-ANewDay.mp3': 0.5,
@@ -36,6 +42,7 @@ BGM_VOLUME_MAP = {
     '残影_-_知我（钢琴版）.mp3': 0.4,
     '赵海洋_-_夜空的寂静_(夜色钢琴曲).mp3': 0.5,
 }
+
 # 画面特效
 GLOBAL_SCENE_EFFECT = [
     draft.Video_scene_effect_type.渐渐放大,
@@ -58,9 +65,34 @@ GLOBAL_SCENE_EFFECT = [
 class GoodStoryClipService:
 
     @staticmethod
+    def generate_activity_video_one_step(req_data: GoodStoryClipReqInfo):
+        """一步到位生成活动视频片段"""
+        output_info = JyTaskOutputInfo()
+        try:
+            # 下载素材
+            GoodStoryClipService.download_activity_video_material(req_data)
+            # 剪辑
+            GoodStoryClipService.cut_activity_video(req_data)
+            # 导出
+            local_path = GoodStoryClipService.export_activity_video_clip(req_data.activity_name)
+            # 上传
+            oss_url = GoodStoryClipService.upload_to_oss(local_path)
+            output_info.success = True
+            output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
+            output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
+            output_info.text_content = oss_url
+            return output_info
+        except Exception as e:
+            logger.error(f"生成好人好事视频片段失败：{e}", exc_info=True)
+            output_info.success = False
+            output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
+            output_info.task_message = str(e)
+            return output_info
+
+    @staticmethod
     def generate_good_story_clip_one_step(req_data: GoodStoryClipReqInfo):
         """
-        一步到位生成好人好事视频片段
+            一步到位生成好人好事视频片段
         """
         output_info = JyTaskOutputInfo()
         try:
@@ -83,6 +115,218 @@ class GoodStoryClipService:
             output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
             output_info.task_message = str(e)
             return output_info
+
+    @staticmethod
+    def download_activity_video_material(req_data: GoodStoryClipReqInfo):
+        """下载故事素材"""
+        if req_data is None:
+            raise Exception("素材数据不能为空")
+        activity_name = req_data.activity_name
+        logger.info(f"[开始下载活动视频素材] 活动名：{activity_name}")
+        for track in req_data.tracks:
+            for segment in track.segments:
+                if segment.url:
+                    filename = segment.filename
+                    if not filename:
+                        filename = os.path.basename(process_url(segment.url))
+                    local_file_path = os.path.join(LOCAL_DATA_DIR, activity_name, filename)
+                    if not os.path.exists(local_file_path):
+                        os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+                        if download_by_url_to_local(segment.url, local_file_path):
+                            segment.local_file_path = local_file_path
+                            logger.info(
+                                f"[开始下载活动视频素材] 活动名：{activity_name}, 素材名称：{filename}, 素材URL：{segment.url}")
+                        else:
+                            raise Exception(
+                                f"[开始下载活动视频素材] 活动名：{activity_name}, 素材名称：{filename}, 素材URL：{segment.url}")
+                    else:
+                        segment.local_file_path = local_file_path
+                        logger.info(
+                            f"[开始下载活动视频素材] 活动名：{activity_name}, 素材名称：{filename}, 素材URL：{segment.url}")
+
+    @staticmethod
+    def export_activity_video_clip(activity_name) -> str:
+        """导出活动视频片段"""
+        if activity_name is None:
+            raise Exception("活动名不能为空")
+        if not os.path.exists(ACTIVITY_VIDEO_DRAFT_FILE):
+            raise Exception(f"【{ACTIVITY_VIDEO_DRAFT_NAME}】草稿文件不存在：{ACTIVITY_VIDEO_DRAFT_FILE}")
+        video_save_path = os.path.join(LOCAL_DATA_DIR, "clips",
+                                       f"{activity_name}_{get_current_datetime_str_()}.mp4")
+        os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
+        ctrl = draft.Jianying_controller()
+        export_success = ctrl.export_draft_in_thread(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
+        if not export_success:
+            raise Exception(f"导出失败：{video_save_path}")
+        return video_save_path
+
+    @staticmethod
+    def cut_activity_video(req_data: GoodStoryClipReqInfo):
+        """自动裁剪活动视频"""
+        if req_data is None:
+            raise Exception("素材数据不能为空")
+        if not os.path.isdir(ACTIVITY_VIDEO_DRAFT_FILE):
+            raise Exception(f"文件不存在：{ACTIVITY_VIDEO_DRAFT_FILE}")
+        if not req_data.tracks or len(req_data.tracks) == 0:
+            raise Exception("轨道信息不能为空")
+        activity_name = req_data.activity_name
+        logger.info(f"[开始自动裁剪活动视频] 活动名：{activity_name}")
+
+        #################### 调整配置的核心区域 #############################
+        # 字体
+        font = draft.Font_type.抖音美好体
+        # font = draft.Font_type.新青年体
+        # 标题字体 白色 14号 居中 加粗
+        title_text_style = draft.Text_style(size=14, align=1, bold=True)
+        # 子标题字体 #EE2D2A 12号 居中 加粗
+        sub_title_text_style = draft.Text_style(color=(0.93, 0.176, 0.16), size=12, align=1, bold=True)
+        # 字幕字体配置
+        subtitle_text_style = draft.Text_style(size=12, align=1, bold=True)
+        # 创建剪映草稿
+        script = draft.Script_file(1080, 1920)  # 1080x1920分辨率
+        ##################################################################
+
+        # 解析参数
+        for track in req_data.tracks:
+            track_type = track.track_type
+            track_name = track.track_name
+            track_mute = track.track_mute or False
+            # 添加轨道
+            if track_type == BizPlatformTrackTypeEnum.VIDEO.value:
+                # 添加视频轨道
+                script.add_track(track_type=draft.Track_type.video, track_name=track_name, mute=track_mute)
+            elif track_type == BizPlatformTrackTypeEnum.IMAGE.value:
+                # 添加图片轨道
+                script.add_track(track_type=draft.Track_type.video, track_name=track_name, mute=track_mute)
+            elif track_type == BizPlatformTrackTypeEnum.AUDIO.value:
+                # 添加音频轨道
+                script.add_track(track_type=draft.Track_type.audio, track_name=track_name, mute=track_mute)
+            elif track_type == BizPlatformTrackTypeEnum.TEXT.value:
+                # 添加文本轨道
+                script.add_track(track_type=draft.Track_type.text, track_name=track_name)
+            else:
+                raise Exception(f"不支持的轨道类型：{track_type}")
+            # 添加轨道素材
+            for segment in track.segments:
+                if not segment.type:
+                    logger.error(f"轨道素材类型不能为空：{segment}")
+                    continue
+                segment_type = segment.type
+
+                # 添加布局设置
+                clip_settings = draft.Clip_settings()
+                if segment.clip_settings:
+                    if segment.clip_settings.transform_x is not None:
+                        clip_settings.transform_x = segment.clip_settings.transform_x
+                    if segment.clip_settings.transform_y is not None:
+                        clip_settings.transform_y = segment.clip_settings.transform_y
+                    if segment.clip_settings.scale_x is not None:
+                        clip_settings.scale_x = segment.clip_settings.scale_x
+                    if segment.clip_settings.scale_y is not None:
+                        clip_settings.scale_y = segment.clip_settings.scale_y
+                    if segment.clip_settings.rotation is not None:
+                        clip_settings.rotation = segment.clip_settings.rotation
+                    if segment.clip_settings.alpha is not None:
+                        clip_settings.alpha = segment.clip_settings.alpha
+
+                if segment_type == BizPlatformSegmentTypeEnum.VIDEO.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
+                    video_material = draft.Video_material(segment.local_file_path)
+                    video_segment = draft.Video_segment(video_material, trange(segment.start_time_ms * 1000,
+                                                                               segment.duration_ms * 1000))
+                    # 添加一个入场动画
+                    if segment.has_entry_animation:
+                        video_segment.add_animation(Intro_type.斜切)
+                    # 添加一个转场类型
+                    if segment.has_transition:
+                        video_segment.add_transition(Transition_type.风车)
+                    # 添加一个画面特效
+                    if segment.has_effect:
+                        scene_effect = random.choice(GLOBAL_SCENE_EFFECT)
+                        video_segment.add_effect(scene_effect)
+                    # 添加到视频轨道
+                    script.add_segment(video_segment, track_name)
+                elif segment_type == BizPlatformSegmentTypeEnum.IMAGE.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
+                    video_material = draft.Video_material(segment.local_file_path)
+                    video_segment = draft.Video_segment(video_material,
+                                                        trange(segment.start_time_ms * 1000,
+                                                               segment.duration_ms * 1000),
+                                                        clip_settings=clip_settings)
+                    # 添加一个入场动画
+                    if segment.has_entry_animation:
+                        video_segment.add_animation(Intro_type.斜切)
+                    # 添加一个转场类型
+                    if segment.has_transition:
+                        video_segment.add_transition(Transition_type.风车)
+                    # 添加一个画面特效
+                    if segment.has_effect:
+                        scene_effect = random.choice(GLOBAL_SCENE_EFFECT)
+                        video_segment.add_effect(scene_effect)
+                    # 添加轨道
+                    script.add_segment(video_segment, track_name)
+                elif segment_type == BizPlatformSegmentTypeEnum.AUDIO.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
+                    segment_volume = segment.volume or 0.6
+                    audio_material = draft.Audio_material(segment.local_file_path)
+                    duration_time = min(segment.duration_ms * 1000, audio_material.duration)
+                    audio_segment = draft.Audio_segment(audio_material,
+                                                        trange(segment.start_time_ms * 1000,
+                                                               duration_time),
+                                                        volume=segment_volume
+                                                        )
+                    # 增加一个1s的淡入和淡出
+                    audio_segment.add_fade("1s", "1s")
+                    # 添加到音频轨道
+                    script.add_segment(audio_segment, track_name)
+                elif segment_type == BizPlatformSegmentTypeEnum.TEXT.value:
+                    if not segment.text:
+                        raise Exception(f"素材文本不存在")
+                    if track_name == '标题':
+                        # 文本片段
+                        text_segment = draft.Text_segment(
+                            segment.text, trange(segment.start_time_ms * 1000,
+                                                 segment.duration_ms * 1000),
+                            font=font,
+                            style=title_text_style,
+                            clip_settings=clip_settings,  # 位置在屏幕上方
+                            border=draft.Text_border(color=(0.957, 0.051, 0.051)),
+                        )
+                        script.add_segment(text_segment, track_name)
+                    elif track_name == '子标题':
+                        text_segment = draft.Text_segment(
+                            segment.text, trange(segment.start_time_ms * 1000,
+                                                 segment.duration_ms * 1000),
+                            style=sub_title_text_style,
+                            clip_settings=clip_settings,
+                            border=draft.Text_border(),  # 默认黑色描边
+                        )
+                        script.add_segment(text_segment, track_name)
+                    else:
+                        text_segment = draft.Text_segment(
+                            segment.text, trange(segment.start_time_ms * 1000,
+                                                 segment.duration_ms * 1000),
+                            font=font,
+                            clip_settings=clip_settings,
+                            style=title_text_style,  # 字体颜色为黄色
+                        )
+                        text_segment.add_effect("7403943938391887138")
+                        script.add_segment(text_segment, track_name)
+                elif segment_type == BizPlatformSegmentTypeEnum.SUBTITLE.value:
+                    if not segment.local_file_path or not os.path.exists(segment.local_file_path):
+                        raise Exception(f"素材文件不存在：{segment.local_file_path}")
+                    script.import_srt(segment.local_file_path,
+                                      track_name=track_name,
+                                      time_offset=segment.start_time_ms * 1000,
+                                      text_style=subtitle_text_style,
+                                      clip_settings=draft.Clip_settings(transform_y=-0.5),
+                                      border=draft.Text_border(),  # 默认黑色描边
+                                      )
+        # 保存草稿
+        script.dump(os.path.join(ACTIVITY_VIDEO_DRAFT_FILE, 'draft_content.json'))
 
     @staticmethod
     def download_good_story_material(req_data: GoodStoryClipReqInfo):
@@ -305,7 +549,7 @@ class GoodStoryClipService:
         if not os.path.exists(local_path):
             raise Exception(f"文件不存在：{local_path}")
         # 视频上传OSS
-        oss_path = local_path.replace(LOCAL_GOOD_STORY_MATERIAL_DATA_DIR, OSS_VIDEO_MAKING_PATH_PREFIX)
+        oss_path = local_path.replace(LOCAL_DATA_DIR, OSS_VIDEO_MAKING_PATH_PREFIX)
         # 替换oss_path中 \ 为 /
         oss_path = oss_path.replace("\\", "/")
         logging.info(f"[视频上传OSS] {local_path} -> {oss_path}")

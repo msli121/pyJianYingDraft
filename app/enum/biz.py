@@ -30,6 +30,7 @@ class BizPlatformJyTaskTypeEnum(Enum):
     """业务平台任务类型枚举"""
     HouseVideoClip = ('house_video_clip', '房源视频剪辑')
     GoodStoryClip = ('good_story_clip', '好人好事片段剪辑')
+    ActivityVideoClip = ('activity_video_clip', '活动视频剪辑')
     GoodStoryCompleteClip = ('good_story_complete_clip', '好人好事成片剪辑')
 
     def __new__(cls, value, desc):
@@ -50,8 +51,8 @@ class BizPlatformJyTaskTypeEnum(Enum):
 class BizPlatformTaskPriorityEnum(Enum):
     """任务优先级枚举"""
     HouseVideoClip = (5, '房源视频剪辑')
+    ActivityVideoClip = (1, '活动视频剪辑')
     GoodStoryClip = (0, '好人好事片段剪辑')
-    GoodStoryCompleteClip = (1, '好人好事成片剪辑')
 
     def __new__(cls, value, desc):
         obj = object.__new__(cls)

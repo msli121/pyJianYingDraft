@@ -85,6 +85,8 @@ class TaskService:
                 return cls._process_house_video_task(task_id, task_param)
             elif task_type == BizPlatformJyTaskTypeEnum.GoodStoryClip.value:
                 return cls._process_good_story_clip_task(task_id, task_param)
+            elif task_type == BizPlatformJyTaskTypeEnum.ActivityVideoClip.value:
+                return cls._process_activity_video_task(task_id, task_param)
             raise ValueError(f"不支持的任务类型: {task_type}")
         except Exception as e:
             logger.error(f"任务处理失败 task_id:{task_id}, error:{str(e)}", exc_info=True)
@@ -110,6 +112,20 @@ class TaskService:
         """处理好故事视频剪辑任务"""
         req_data = GoodStoryClipReqInfo.from_dict(task_param)
         task_output = GoodStoryClipService.generate_good_story_clip_one_step(req_data)
+        # 更新任务状态
+        BizPlatformJyTask.update(
+            id=task_id,
+            task_status=task_output.task_status,
+            task_message=task_output.task_message,
+            task_result=task_output.text_content,
+            end_time=datetime.now()
+        )
+
+    @classmethod
+    def _process_activity_video_task(cls, task_id: int, task_param: dict):
+        """处理活动剪辑任务"""
+        req_data = GoodStoryClipReqInfo.from_dict(task_param)
+        task_output = GoodStoryClipService.generate_activity_video_one_step(req_data)
         # 更新任务状态
         BizPlatformJyTask.update(
             id=task_id,

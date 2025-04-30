@@ -36,7 +36,6 @@ class JyTaskOutputInfo(BaseModel):
         return cls(**data)
 
 
-
 class ClipSettings(BaseModel):
     """素材片段的图像调节设置"""
     alpha: Optional[float] = None
@@ -176,6 +175,8 @@ class GoodStoryClipReqInfo(BaseModel):
     story_id: Optional[int] = None  # 故事ID (修正了类型注解，从 id 改为 int)
     story_name: Optional[str] = None  # 故事名称
     story_duration_ms: Optional[int] = None  # 故事片段总时长
+    cover_url: Optional[str] = None  # 封面图地址
+    activity_name: Optional[str] = None  # 活动名称
     tracks: Optional[List[GoodStoryTrackInfo]] = None  # 轨道信息
 
     def to_dict(self) -> Dict[str, Any]:
@@ -186,6 +187,8 @@ class GoodStoryClipReqInfo(BaseModel):
             "story_id": self.story_id,
             "story_name": self.story_name,
             "story_duration_ms": self.story_duration_ms,
+            "cover_url": self.cover_url,
+            "activity_name": self.activity_name,
             "tracks": [track.to_dict() for track in self.tracks] if self.tracks else [],
         }
 
