@@ -186,7 +186,6 @@ class GoodStoryClipService:
         # 创建剪映草稿
         script = draft.Script_file(1080, 1920)  # 1080x1920分辨率
         ##################################################################
-        main_track_name = "主轨道"
         # 解析参数
         for track in req_data.tracks:
             track_type = track.track_type
@@ -259,10 +258,15 @@ class GoodStoryClipService:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     video_material = draft.Video_material(segment.local_file_path)
-                    keep_duration = min(video_material.duration, segment.duration_ms * 1000)
-                    video_segment = draft.Video_segment(video_material,
-                                                        trange(segment.start_time_ms * 1000, keep_duration),
-                                                        clip_settings=clip_settings)
+                    if segment.duration_ms is None or segment.start_time_ms is None:
+                        video_segment = draft.Video_segment(video_material,
+                                                            trange(segment_offset, video_material.duration))
+                        segment_offset += video_material.duration
+                    else:
+                        keep_duration = min(video_material.duration, segment.duration_ms * 1000)
+                        video_segment = draft.Video_segment(video_material,
+                                                            trange(segment.start_time_ms * 1000, keep_duration),
+                                                            clip_settings=clip_settings)
                     # 添加一个入场动画
                     if segment.has_entry_animation:
                         video_segment.add_animation(Intro_type.斜切)
