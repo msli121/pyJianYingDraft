@@ -186,7 +186,7 @@ class GoodStoryClipService:
         # 创建剪映草稿
         script = draft.Script_file(1080, 1920)  # 1080x1920分辨率
         ##################################################################
-
+        main_track_name = "主轨道"
         # 解析参数
         for track in req_data.tracks:
             track_type = track.track_type
@@ -207,6 +207,7 @@ class GoodStoryClipService:
                 script.add_track(track_type=draft.Track_type.text, track_name=track_name)
             else:
                 raise Exception(f"不支持的轨道类型：{track_type}")
+            segment_offset = 0
             # 添加轨道素材
             for segment in track.segments:
                 if not segment.type:
@@ -234,9 +235,14 @@ class GoodStoryClipService:
                     if not segment.local_file_path or not os.path.exists(segment.local_file_path):
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     video_material = draft.Video_material(segment.local_file_path)
-                    keep_duration = min(video_material.duration, segment.duration_ms * 1000)
-                    video_segment = draft.Video_segment(video_material,
-                                                        trange(segment.start_time_ms * 1000, keep_duration))
+                    if segment.duration_ms is None or segment.start_time_ms is None:
+                        video_segment = draft.Video_segment(video_material,
+                                                            trange(segment_offset, video_material.duration))
+                        segment_offset += video_material.duration
+                    else:
+                        keep_duration = min(video_material.duration, segment.duration_ms * 1000)
+                        video_segment = draft.Video_segment(video_material,
+                                                            trange(segment.start_time_ms * 1000, keep_duration))
                     # 添加一个入场动画
                     if segment.has_entry_animation:
                         video_segment.add_animation(Intro_type.斜切)
@@ -274,12 +280,19 @@ class GoodStoryClipService:
                         raise Exception(f"素材文件不存在：{segment.local_file_path}")
                     segment_volume = segment.volume or 0.6
                     audio_material = draft.Audio_material(segment.local_file_path)
-                    duration_time = min(segment.duration_ms * 1000, audio_material.duration)
-                    audio_segment = draft.Audio_segment(audio_material,
-                                                        trange(segment.start_time_ms * 1000,
-                                                               duration_time),
-                                                        volume=segment_volume
-                                                        )
+                    if segment.duration_ms is None or segment.duration_ms is None:
+                        audio_segment = draft.Audio_segment(audio_material,
+                                                            trange(0,
+                                                                   script.duration),
+                                                            volume=segment_volume
+                                                            )
+                    else:
+                        duration_time = min(segment.duration_ms * 1000, audio_material.duration)
+                        audio_segment = draft.Audio_segment(audio_material,
+                                                            trange(segment.start_time_ms * 1000,
+                                                                   duration_time),
+                                                            volume=segment_volume
+                                                            )
                     # 增加一个1s的淡入和淡出
                     audio_segment.add_fade("1s", "1s")
                     # 添加到音频轨道
