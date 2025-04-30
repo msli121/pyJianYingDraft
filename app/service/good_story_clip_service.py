@@ -287,9 +287,9 @@ class GoodStoryClipService:
                     segment_volume = segment.volume or 0.6
                     audio_material = draft.Audio_material(segment.local_file_path)
                     if segment.duration_ms is None or segment.duration_ms is None:
+                        keep_duration = min(audio_material.duration, script.duration)
                         audio_segment = draft.Audio_segment(audio_material,
-                                                            trange(0,
-                                                                   script.duration),
+                                                            trange(0, keep_duration),
                                                             volume=segment_volume
                                                             )
                     else:
