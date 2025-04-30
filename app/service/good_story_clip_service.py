@@ -242,6 +242,7 @@ class GoodStoryClipService:
                         keep_duration = min(video_material.duration, segment.duration_ms * 1000)
                         video_segment = draft.Video_segment(video_material,
                                                             trange(segment.start_time_ms * 1000, keep_duration))
+                        segment_offset += keep_duration
                     # 添加一个入场动画
                     if segment.has_entry_animation:
                         video_segment.add_animation(Intro_type.斜切)
@@ -267,6 +268,7 @@ class GoodStoryClipService:
                         video_segment = draft.Video_segment(video_material,
                                                             trange(segment.start_time_ms * 1000, keep_duration),
                                                             clip_settings=clip_settings)
+                        segment_offset += keep_duration
                     # 添加一个入场动画
                     if segment.has_entry_animation:
                         video_segment.add_animation(Intro_type.斜切)
