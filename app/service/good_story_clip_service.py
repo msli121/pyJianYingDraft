@@ -48,17 +48,12 @@ GLOBAL_SCENE_EFFECT = [
     draft.Video_scene_effect_type.渐渐放大,
     draft.Video_scene_effect_type.放大镜,
     draft.Video_scene_effect_type.泡泡变焦,
-    draft.Video_scene_effect_type.镜头变焦,
     draft.Video_scene_effect_type.开幕,
-    draft.Video_scene_effect_type.云朵绵绵,
-    draft.Video_scene_effect_type.S形运镜,
-    draft.Video_scene_effect_type.丝滑运镜,
     draft.Video_scene_effect_type.金片,
     draft.Video_scene_effect_type.金粉,
     draft.Video_scene_effect_type.金粉_II,
     draft.Video_scene_effect_type.金粉撒落,
     draft.Video_scene_effect_type.模糊开幕,
-    draft.Video_scene_effect_type.渐显开幕,
 ]
 
 
