@@ -46,14 +46,24 @@ BGM_VOLUME_MAP = {
 # 画面特效
 GLOBAL_SCENE_EFFECT = [
     draft.Video_scene_effect_type.渐渐放大,
-    draft.Video_scene_effect_type.放大镜,
+    draft.Video_scene_effect_type.光斑飘落,
     draft.Video_scene_effect_type.泡泡变焦,
     draft.Video_scene_effect_type.开幕,
+    draft.Video_scene_effect_type.渐显开幕,
     draft.Video_scene_effect_type.金片,
     draft.Video_scene_effect_type.金粉,
     draft.Video_scene_effect_type.金粉_II,
+    draft.Video_scene_effect_type.金粉_III,
     draft.Video_scene_effect_type.金粉撒落,
-    draft.Video_scene_effect_type.模糊开幕,
+    draft.Video_scene_effect_type.浪漫氛围,
+    draft.Video_scene_effect_type.浪漫氛围_II,
+    draft.Video_scene_effect_type.烟花_II,
+    draft.Video_scene_effect_type.星火,
+    draft.Video_scene_effect_type.星火_II,
+    draft.Video_scene_effect_type.亮片,
+    draft.Video_scene_effect_type.白色爱心,
+    draft.Video_scene_effect_type.温柔细闪,
+    draft.Video_scene_effect_type.胶片漏光,
 ]
 
 
