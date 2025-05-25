@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import random
+import time
 
 import pyJianYingDraft as draft
 from app.entity.jy_task import JyTaskOutputInfo
@@ -20,6 +21,7 @@ from pyJianYingDraft import trange, Clip_settings
 from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local
 from app.utils.oss_utils import init_oss, upload_local_file_to_oss, \
     generate_get_url, process_url
+from pyJianYingDraft.jianying_exporter import JianyingExporter
 
 LOCAL_HOUSE_MATERIAL_DATA_DIR = os.path.join(BASE_DIR, 'data')
 LOCAL_HOUSE_MATERIAL_BGM_DIR = os.path.join(BASE_DIR, 'data', 'bgm')
@@ -225,8 +227,11 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
 # 自动导出视频
 def jy_auto_export_video(jy_draft_name, video_save_path):
     # 此前需要将剪映打开，并位于目录页
-    ctrl = draft.Jianying_controller()
-    return ctrl.export_draft_in_thread(jy_draft_name, video_save_path)
+    start_time = time.time()
+    exporter = JianyingExporter()
+    export_success = exporter.export_draft_in_thread(jy_draft_name, video_save_path)
+    logging.info(f"导出完成 耗时：{time.time() - start_time:.2f}秒")
+    return export_success
 
 
 # 剪映自动一步到位，下载素材+剪辑+导出+上传OSS
@@ -306,6 +311,7 @@ def handle_auto_clip_house_video(data: dict) -> JyTaskOutputInfo:
         output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
         output_info.task_message = str(e)
         return output_info
+
 
 if __name__ == '__main__':
     # 初始化OSS配置

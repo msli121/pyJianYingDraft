@@ -8,6 +8,7 @@
 import logging
 import os
 import random
+import time
 
 import pyJianYingDraft as draft
 from app.entity.jy_task import GoodStoryClipReqInfo, JyTaskOutputInfo
@@ -17,6 +18,7 @@ from app.utils.oss_utils import upload_local_file_to_oss, \
     generate_get_url, process_url
 from app_config import BASE_DIR
 from pyJianYingDraft import trange, Intro_type, Transition_type
+from pyJianYingDraft.jianying_exporter import JianyingExporter
 
 logger = logging.getLogger(__name__)
 
@@ -159,11 +161,10 @@ class GoodStoryClipService:
             raise Exception(f"【{ACTIVITY_VIDEO_DRAFT_NAME}】草稿文件不存在：{ACTIVITY_VIDEO_DRAFT_FILE}")
         video_save_path = os.path.join(LOCAL_DATA_DIR, "clips",
                                        f"{activity_name}_{get_current_datetime_str_()}.mp4")
-        os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
-        ctrl = draft.Jianying_controller()
-        export_success = ctrl.export_draft_in_thread(ACTIVITY_VIDEO_DRAFT_NAME, video_save_path)
+        # 自动导出
+        export_success = GoodStoryClipService.jy_auto_export_video(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
         if not export_success:
-            raise Exception(f"导出失败：{video_save_path}")
+            raise Exception(f"导出好人好事故事片段失败：{video_save_path}")
         return video_save_path
 
     @staticmethod
@@ -564,8 +565,8 @@ class GoodStoryClipService:
         video_save_path = os.path.join(LOCAL_GOOD_STORY_MATERIAL_DATA_DIR, "clips",
                                        f"{story_id}_{get_current_datetime_str_()}.mp4")
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
-        ctrl = draft.Jianying_controller()
-        export_success = ctrl.export_draft_in_thread(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
+        # 自动导出
+        export_success = GoodStoryClipService.jy_auto_export_video(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
         if not export_success:
             raise Exception(f"导出好人好事故事片段失败：{video_save_path}")
         return video_save_path
@@ -589,3 +590,16 @@ class GoodStoryClipService:
             url = url.split("?")[0]
         logging.info(f"url={url}")
         return url
+
+    # 自动导出视频
+    @staticmethod
+    def jy_auto_export_video(jy_draft_name, video_save_path) -> bool:
+        """自动导出视频"""
+        if not jy_draft_name or not video_save_path:
+            raise Exception("导出视频失败：草稿名或保存路径不能为空")
+        os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
+        start_time = time.time()
+        exporter = JianyingExporter()
+        export_success = exporter.export_draft_in_thread(jy_draft_name, video_save_path)
+        logging.info(f"导出完成 耗时：{time.time() - start_time:.2f}秒")
+        return export_success
