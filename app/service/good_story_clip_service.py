@@ -162,7 +162,7 @@ class GoodStoryClipService:
         video_save_path = os.path.join(LOCAL_DATA_DIR, "clips",
                                        f"{activity_name}_{get_current_datetime_str_()}.mp4")
         # 自动导出
-        export_success = GoodStoryClipService.jy_auto_export_video(activity_name, video_save_path)
+        export_success = GoodStoryClipService.jy_auto_export_video(ACTIVITY_VIDEO_DRAFT_NAME, video_save_path)
         if not export_success:
             raise Exception(f"导出好人好事故事片段失败：{video_save_path}")
         return video_save_path
