@@ -48,7 +48,7 @@ class BizPlatformJyTaskTypeEnum(Enum):
         return {e.value: e.desc for e in cls}
 
 
-class BizPlatformTaskPriorityEnum(Enum):
+class BizPlatformJyTaskPriorityEnum(Enum):
     """任务优先级枚举"""
     HouseVideoClip = (5, '房源视频剪辑')
     ActivityVideoClip = (1, '活动视频剪辑')

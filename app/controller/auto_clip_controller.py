@@ -11,7 +11,7 @@ import logging
 from flask import Blueprint, jsonify, request
 
 from app.entity.jy_task import GoodStoryClipReqInfo
-from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum, BizPlatformTaskPriorityEnum
+from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum, BizPlatformJyTaskPriorityEnum
 from app.models.biz import BizPlatformJyTask
 from app.service.good_story_clip_service import GoodStoryClipService
 from app.service.house_video_clip_service import handle_auto_clip_house_video
@@ -73,7 +73,7 @@ def auto_cut_house_video_route():
             task_type=BizPlatformJyTaskTypeEnum.HouseVideoClip.value,
             task_param=json.dumps(data, ensure_ascii=False),
             task_status=BizPlatformTaskStatusEnum.Doing.value,
-            task_priority=BizPlatformTaskPriorityEnum.HouseVideoClip.value,
+            task_priority=BizPlatformJyTaskPriorityEnum.HouseVideoClip.value,
         )
         task_output = handle_auto_clip_house_video(data)
         if task_output.success:
@@ -112,7 +112,7 @@ def async_auto_cut_house_video_route():
             task_type=BizPlatformJyTaskTypeEnum.HouseVideoClip.value,
             task_param=json.dumps(data, ensure_ascii=False),
             task_status=BizPlatformTaskStatusEnum.Pending.value,
-            task_priority=BizPlatformTaskPriorityEnum.HouseVideoClip.value,
+            task_priority=BizPlatformJyTaskPriorityEnum.HouseVideoClip.value,
         )
         res = {
             "jy_task_id": jy_task_info.get('id'),
@@ -141,7 +141,7 @@ def good_story_clip_route():
             task_type=BizPlatformJyTaskTypeEnum.GoodStoryClip.value,
             task_param=json.dumps(data, ensure_ascii=False),
             task_status=BizPlatformTaskStatusEnum.Doing.value,
-            task_priority=BizPlatformTaskPriorityEnum.GoodStoryClip.value,
+            task_priority=BizPlatformJyTaskPriorityEnum.GoodStoryClip.value,
         )
         req_data = GoodStoryClipReqInfo.from_dict(data)
         task_output = GoodStoryClipService.generate_good_story_clip_one_step(req_data)
@@ -173,7 +173,7 @@ def async_good_story_clip_route():
             task_type=BizPlatformJyTaskTypeEnum.GoodStoryClip.value,
             task_param=json.dumps(data, ensure_ascii=False),
             task_status=BizPlatformTaskStatusEnum.Pending.value,
-            task_priority=BizPlatformTaskPriorityEnum.GoodStoryClip.value,
+            task_priority=BizPlatformJyTaskPriorityEnum.GoodStoryClip.value,
         )
         res = {
             "jy_task_id": jy_task_info.get('id'),
@@ -202,7 +202,7 @@ def activity_video_clip_route():
             task_type=BizPlatformJyTaskTypeEnum.ActivityVideoClip.value,
             task_param=json.dumps(data, ensure_ascii=False),
             task_status=BizPlatformTaskStatusEnum.Doing.value,
-            task_priority=BizPlatformTaskPriorityEnum.ActivityVideoClip.value,
+            task_priority=BizPlatformJyTaskPriorityEnum.ActivityVideoClip.value,
         )
         req_data = GoodStoryClipReqInfo.from_dict(data)
         task_output = GoodStoryClipService.generate_activity_video_one_step(req_data)
@@ -234,7 +234,7 @@ def async_activity_video_clip_route():
             task_type=BizPlatformJyTaskTypeEnum.ActivityVideoClip.value,
             task_param=json.dumps(data, ensure_ascii=False),
             task_status=BizPlatformTaskStatusEnum.Pending.value,
-            task_priority=BizPlatformTaskPriorityEnum.ActivityVideoClip.value,
+            task_priority=BizPlatformJyTaskPriorityEnum.ActivityVideoClip.value,
         )
         res = {
             "jy_task_id": jy_task_info.get('id'),
