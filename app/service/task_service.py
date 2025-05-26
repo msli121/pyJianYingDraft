@@ -21,7 +21,7 @@ class TaskService:
         """检查并处理超时任务"""
         try:
             # 超时时间
-            timeout_threshold = datetime.now() - timedelta(minutes=3)
+            timeout_threshold = datetime.now() - timedelta(minutes=5)
             filters = {
                 "task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value),
                 "start_time": ("lt", timeout_threshold)
