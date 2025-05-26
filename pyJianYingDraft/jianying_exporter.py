@@ -152,8 +152,8 @@ class JianyingExporter:
             raise Exception("无法开始导出")
 
         # 等待导出完成
-        if not self._wait_export_complete(timeout=30):
-            raise Exception(f"导出超时, 时限为30秒")
+        if not self._wait_export_complete(timeout=120):
+            raise Exception(f"导出超时, 时限为120秒")
 
         # 回到主页
         self._ensure_window_and_home()
