@@ -16,7 +16,7 @@ from app.enum.biz import BizPlatformTrackTypeEnum, BizPlatformSegmentTypeEnum, B
 from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local
 from app.utils.oss_utils import upload_local_file_to_oss, \
     generate_get_url, process_url
-from app_config import BASE_DIR
+from app_config import BASE_DIR, AppConfig
 from pyJianYingDraft import trange, Intro_type, Transition_type
 from pyJianYingDraft.jianying_exporter import JianyingExporter
 
@@ -31,11 +31,11 @@ OSS_VIDEO_MAKING_BGM_PATH_PREFIX = 'video-making/bgm'  # OSS的视频剪辑背�
 
 # 好人好事草稿名
 GOOD_STORY_CLIP_DRAFT_NAME = '好人好事片段'
-GOOD_STORY_CLIP_DRAFT_FILE = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", GOOD_STORY_CLIP_DRAFT_NAME)
+GOOD_STORY_CLIP_DRAFT_FILE = os.path.join(AppConfig.JY_DRAFT_DIR, GOOD_STORY_CLIP_DRAFT_NAME)
 
 # 活动视频成片
 ACTIVITY_VIDEO_DRAFT_NAME = '活动视频成片'
-ACTIVITY_VIDEO_DRAFT_FILE = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", ACTIVITY_VIDEO_DRAFT_NAME)
+ACTIVITY_VIDEO_DRAFT_FILE = os.path.join(AppConfig.JY_DRAFT_DIR, ACTIVITY_VIDEO_DRAFT_NAME)
 
 BGM_VOLUME_MAP = {
     'PederB.Helland-ANewDay.mp3': 0.5,

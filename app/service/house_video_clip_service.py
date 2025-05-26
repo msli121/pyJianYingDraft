@@ -239,7 +239,7 @@ def jy_auto_export_video(jy_draft_name, video_save_path):
 # 剪映自动一步到位，下载素材+剪辑+导出+上传OSS
 def jy_auto_cut_and_export_one_step(task_id, house_no, video_script_url):
     jy_draft_name = "自动化剪辑"
-    jy_draft_dir = os.path.join("D:\\Documents\\JianYingData\\JianyingPro Drafts", jy_draft_name)
+    jy_draft_dir = os.path.join(AppConfig.JY_DRAFT_DIR, jy_draft_name)
     # 下载视频脚本和素材
     logging.info("[下载视频脚本和素材] 开始进行...")
     script_local_path = download_video_script_and_material(task_id, house_no, video_script_url)

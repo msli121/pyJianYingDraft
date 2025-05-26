@@ -74,6 +74,9 @@ class AppConfig:
     SQLALCHEMY_POOL_RECYCLE = 1800  # 设置连接池中连接的回收时间
     SQLALCHEMY_MAX_OVERFLOW = 10  # 设置连接池的最大溢出数
 
+    # 剪映相关配置
+    JY_DRAFT_DIR = os.getenv('JY_DRAFT_DIR', "D:\\Documents\\JianYingData\\JianyingPro Drafts")
+
 
 if __name__ == '__main__':
     t = parse_boolean(True)
