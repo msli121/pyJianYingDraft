@@ -17,3 +17,4 @@ colorlog
 flask
 gunicorn
 pywin32
+pyautogui

@@ -2,12 +2,11 @@
 import os
 import shutil
 import time
-import traceback
 from enum import Enum
-from typing import Optional, Literal, Callable, Union
+from typing import Optional, Literal, Callable
 
 import uiautomation as uia
-
+import pyautogui
 
 class Export_resolution(Enum):
     """导出分辨率"""
@@ -89,6 +88,12 @@ class ControlFinder:
                     time.sleep(0.5)
         return False
 
+    @staticmethod
+    def send_esc_key() -> None:
+        """发送ESC键"""
+        print("尝试使用ESC键关闭窗口")
+        pyautogui.press('esc')
+
 
 class JianyingExporter:
     """剪映控制器"""
@@ -147,8 +152,8 @@ class JianyingExporter:
             raise Exception("无法开始导出")
 
         # 等待导出完成
-        if not self._wait_export_complete(timeout):
-            raise Exception(f"导出超时, 时限为{timeout}秒")
+        if not self._wait_export_complete(timeout=30):
+            raise Exception(f"导出超时, 时限为30秒")
 
         # 回到主页
         self._ensure_window_and_home()
@@ -376,11 +381,20 @@ class JianyingExporter:
             )
 
             if succeed_close_btn.Exists(0):
-                ControlFinder.retry_click(succeed_close_btn, delay=0.5)
+                # ControlFinder.retry_click(succeed_close_btn, delay=0.5)
+                ControlFinder.send_esc_key()
+                time.sleep(0.5)
+                # 编辑状态
+                self.app_status = 'edit'
                 return True
 
             time.sleep(check_interval)
 
+        # 超时，回到编辑状态
+        ControlFinder.send_esc_key()
+        time.sleep(0.5)
+        # 编辑状态
+        self.app_status = 'edit'
         return False
 
     def switch_to_home(self) -> bool:
@@ -389,13 +403,17 @@ class JianyingExporter:
             return True
 
         if self.app_status != "edit":
-            print("警告: 当前不在编辑模式，无法切换到主页")
-            return False
+            # print("警告: 当前不在编辑模式，无法切换到主页")
+            print("警告: 当前不在编辑模式，通过ESC回到编辑模型")
+            ControlFinder.send_esc_key()
+            time.sleep(0.5)
+            self.app_status = 'edit'
+            # return False
 
         try:
             close_btn = self.app.GroupControl(searchDepth=1, ClassName="TitleBarButton", foundIndex=3)
             if close_btn.Exists(1.0):
-                ControlFinder.retry_click(close_btn, delay=1.0)
+                ControlFinder.retry_click(close_btn, delay=0.5)
                 return self.get_window()
         except Exception as e:
             print(f"切换到主页失败: {e}")
