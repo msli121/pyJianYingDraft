@@ -20,9 +20,8 @@ class TaskService:
     def check_timeout_tasks(cls):
         """检查并处理超时任务"""
         try:
-            timeout_threshold = datetime.now() - timedelta(
-                hours=current_app.config.get('TASK_TIMEOUT_HOURS', 1)
-            )
+            # 超时时间
+            timeout_threshold = datetime.now() - timedelta(minutes=3)
             filters = {
                 "task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value),
                 "start_time": ("lt", timeout_threshold)

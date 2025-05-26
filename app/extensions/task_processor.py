@@ -16,7 +16,7 @@ def register_scheduled_jobs():
         id='check_timeout_tasks',
         func=check_timeout_tasks,
         trigger='interval',
-        minutes=1,
+        seconds=30,
         replace_existing=True,
         max_instances=1,
     )

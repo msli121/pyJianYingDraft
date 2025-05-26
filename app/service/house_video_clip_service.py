@@ -23,6 +23,8 @@ from app.utils.oss_utils import init_oss, upload_local_file_to_oss, \
     generate_get_url, process_url
 from pyJianYingDraft.jianying_exporter import JianyingExporter
 
+logger = logging.getLogger(__name__)
+
 LOCAL_HOUSE_MATERIAL_DATA_DIR = os.path.join(BASE_DIR, 'data')
 LOCAL_HOUSE_MATERIAL_BGM_DIR = os.path.join(BASE_DIR, 'data', 'bgm')
 OSS_VIDEO_MAKING_PATH_PREFIX = 'video-making/data'  # OSS的视频剪辑数据存放前缀
