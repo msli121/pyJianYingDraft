@@ -1,6 +1,6 @@
 """
 @File: app_config.py.py
-@Description: 
+@Description:
 
 @Author: lms
 @Date: 2025/2/25 09:59
@@ -76,6 +76,9 @@ class AppConfig:
 
     # 剪映相关配置
     JY_DRAFT_DIR = os.getenv('JY_DRAFT_DIR', "D:\\Documents\\JianYingData\\JianyingPro Drafts")
+
+    # 微信通知API配置
+    WECHAT_NOTIFICATION_API_URL = os.getenv('WECHAT_NOTIFICATION_API_URL')
 
 
 if __name__ == '__main__':

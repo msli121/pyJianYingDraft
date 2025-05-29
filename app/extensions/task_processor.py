@@ -2,6 +2,7 @@ import logging
 
 from app import scheduler
 from app.service.task_service import TaskService
+from app.service.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,17 @@ def register_scheduled_jobs():
         replace_existing=False,
         max_instances=1,
     )
+
+    # 处理微信通知 - 每2分钟执行一次
+    scheduler.add_job(
+        id='process_wechat_notifications',
+        func=process_wechat_notifications,
+        trigger='interval',
+        minutes=2,  # 每2分钟执行一次
+        replace_existing=False,
+        max_instances=1,
+    )
+
     logger.info("定时任务已注册")
 
 
@@ -49,3 +61,12 @@ def process_next_task():
             TaskService.process_next_task()
     except Exception as e:
         logger.error(f"处理下一个任务发生错误: {str(e)}", exc_info=True)
+
+
+def process_wechat_notifications():
+    """处理微信通知"""
+    try:
+        with scheduler.app.app_context():
+            NotificationService.process_pending_wechat_notifications()
+    except Exception as e:
+        logger.error(f"处理微信通知发生错误: {str(e)}", exc_info=True)

@@ -7,6 +7,8 @@
 """
 
 from sqlalchemy import Column, DateTime, BigInteger, String, Integer, Text
+from datetime import datetime
+from sqlalchemy.sql import text
 
 from app.models.base_model import BaseModel
 
@@ -28,3 +30,22 @@ class BizPlatformJyTask(BaseModel):
     start_time = Column(DateTime, default=None, comment='任务开始时间')
     end_time = Column(DateTime, default=None, comment='任务结束时间')
     remark = Column(String(255), nullable=True, comment='备注')
+
+
+class CreativityNotification(BaseModel):
+    __tablename__ = 'biz_xhs_kos_note_creativity_notification'
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True, comment='主键')
+    staff_id = Column(String(255), index=True, comment='员工ID')
+    staff_name = Column(String(255), nullable=True, comment='员工姓名')
+    note_id = Column(String(255), index=True, comment='笔记ID')
+    note_url = Column(String(512), nullable=True, comment='笔记URL')
+    note_title = Column(String(255), nullable=True, comment='笔记标题')
+    campaign_id = Column(String(255), comment='广告组ID')
+    unit_id = Column(String(255), comment='广告单元ID')
+    creativity_id = Column(String(255), comment='创意ID')
+    campaign_name = Column(String(255), comment='广告组名称')
+    wechat_notification_status = Column(Integer, default=0, comment='微信通知状态：-1-不允许通知; 0-未通知; 1-已通知; 2-通知失败')
+    round = Column(String(255), nullable=True, comment='投流期数')
+    create_time = Column(DateTime, default=datetime.now, server_default=text("CURRENT_TIMESTAMP"), comment='创建时间')
+    update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now, comment='更新时间')
