@@ -6,8 +6,6 @@ import os
 from datetime import datetime
 from typing import Dict, Any
 
-from flask import current_app
-
 from app.models.biz import CreativityNotification
 
 logger = logging.getLogger(__name__)
@@ -90,8 +88,8 @@ class NotificationService:
             "receivers": [staff_id]
         }
 
-        # 从环境变量获取API URL
-        api_url = current_app.config.get('WECHAT_NOTIFICATION_API_URL')
+        # 直接从环境变量获取API URL
+        api_url = os.getenv('WECHAT_NOTIFICATION_API_URL')
 
         # 发送请求
         try:
