@@ -1,7 +1,6 @@
-import json
 import logging
+from flask import app
 import requests
-import concurrent.futures
 import os
 from datetime import datetime
 from typing import Dict, Any
@@ -29,30 +28,20 @@ class NotificationService:
 
             logger.info(f"发现{notification_count}条待发送微信通知")
 
-            # 使用线程池并行发送通知，最大并发数调整为20
-            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-                # 提交所有任务到线程池
-                future_to_notification = {
-                    executor.submit(cls._send_wechat_notification, notification): notification
-                    for notification in notification_infos
-                }
-
-                # 获取结果
-                success_count = 0
-                for future in concurrent.futures.as_completed(future_to_notification):
-                    notification = future_to_notification[future]
-                    try:
-                        result = future.result()
-                        if result:
-                            success_count += 1
-                    except Exception as e:
-                        logger.error(f"发送微信通知失败: notification_id={notification.get('id')}, error={str(e)}", exc_info=True)
-                        # 更新状态为发送失败
-                        CreativityNotification.update(
-                            id=notification.get('id'),
-                            wechat_notification_status=2,
-                            update_time=datetime.now()
-                        )
+            success_count = 0
+            for notification in notification_infos:
+                try:
+                    result = cls._send_wechat_notification(notification)
+                    if result:
+                        success_count += 1
+                except Exception as e:
+                    logger.error(f"发送微信通知失败: notification_id={notification.get('id')}, error={str(e)}", exc_info=True)
+                    # 更新状态为发送失败
+                    CreativityNotification.update(
+                        id=notification.get('id'),
+                        wechat_notification_status=2,
+                        update_time=datetime.now()
+                    )
 
             logger.info(f"成功发送{success_count}条微信通知")
             return success_count
@@ -88,8 +77,7 @@ class NotificationService:
             "receivers": [staff_id]
         }
 
-        # 直接从环境变量获取API URL
-        api_url = os.getenv('WECHAT_NOTIFICATION_API_URL')
+        api_url = app.config.get('WECHAT_NOTIFICATION_API_URL')
 
         # 发送请求
         try:
