@@ -32,12 +32,12 @@ def register_scheduled_jobs():
         max_instances=1,
     )
 
-    # 处理微信通知 - 每2分钟执行一次
+    # 处理微信通知 - 每10秒执行一次，小数据量高频处理
     scheduler.add_job(
         id='process_wechat_notifications',
         func=process_wechat_notifications,
         trigger='interval',
-        minutes=2,  # 每2分钟执行一次
+        seconds=10,  # 每10秒执行一次
         replace_existing=False,
         max_instances=1,
     )

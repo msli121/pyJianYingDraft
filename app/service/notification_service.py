@@ -15,17 +15,17 @@ logger = logging.getLogger(__name__)
 class NotificationService:
     @classmethod
     def process_pending_wechat_notifications(cls):
-        """处理待发送的微信通知，一次性处理更多通知以适应低频场景"""
+        """处理待发送的微信通知，小数据量高频处理"""
         try:
-            # 查询待发送通知的数据，一次处理500条
-            batch_size = 500
+            # 查询待发送通知的数据，一次只处理10条
+            batch_size = 10
             filters = {"wechat_notification_status": ("eq", 0)}
             notification_count, notification_infos = CreativityNotification.query_with_filters_and_pagination(
                 1, batch_size, filters=filters
             )
 
             if notification_count == 0:
-                logger.info("没有待处理的微信通知")
+                # logger.info("没有待处理的微信通知")  # 高频执行时不记录空的情况
                 return 0
 
             logger.info(f"发现{notification_count}条待发送微信通知")
@@ -36,8 +36,8 @@ class NotificationService:
                 logger.error("无法获取应用实例，无法处理通知")
                 return 0
 
-            # 使用线程池并行发送通知
-            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            # 使用较小的线程池并行发送通知
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 # 提交所有任务到线程池，将应用实例传递给每个线程
                 future_to_notification = {
                     executor.submit(cls._thread_send_notification, app, notification): notification
