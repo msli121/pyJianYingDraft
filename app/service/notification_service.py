@@ -86,7 +86,7 @@ class NotificationService:
         payload = {
             "templateCode": "note-placement-notice",
             "msgType": 2,
-            "moduleCode": "common",
+            "moduleCode": "manager",
             "contentReplacement": {
                 "staff_name": notification.get('staff_name', 'unknown'),
                 "round": notification.get('round', ''),
