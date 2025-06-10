@@ -164,7 +164,7 @@ class GoodStoryClipService:
         # 自动导出
         export_success = GoodStoryClipService.jy_auto_export_video(ACTIVITY_VIDEO_DRAFT_NAME, video_save_path)
         if not export_success:
-            raise Exception(f"导出好人好事故事片段失败：{video_save_path}")
+            raise Exception(f"导出好人好事故事成片失败：{video_save_path}")
         return video_save_path
 
     @staticmethod
@@ -568,7 +568,7 @@ class GoodStoryClipService:
         # 自动导出
         export_success = GoodStoryClipService.jy_auto_export_video(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
         if not export_success:
-            raise Exception(f"导出好人好事故事片段失败：{video_save_path}")
+            raise Exception(f"导出好人好事故事成片失败：{video_save_path}")
         return video_save_path
 
     @staticmethod

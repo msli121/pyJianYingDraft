@@ -91,7 +91,7 @@ class ControlFinder:
     @staticmethod
     def send_esc_key() -> None:
         """发送ESC键"""
-        print("尝试使用ESC键关闭窗口")
+        print("按下ESC键")
         pyautogui.press('esc')
 
 
@@ -408,7 +408,6 @@ class JianyingExporter:
             ControlFinder.send_esc_key()
             time.sleep(0.5)
             self.app_status = 'edit'
-            # return False
 
         try:
             close_btn = self.app.GroupControl(searchDepth=1, ClassName="TitleBarButton", foundIndex=3)
@@ -441,6 +440,7 @@ class JianyingExporter:
             # 激活并置顶窗口
             self.app.SetActive()
             self.app.SetTopmost()
+            print(f"获取窗口成功，窗口当前状态：{self.app_status}")
             return True
 
         except Exception as e:
@@ -461,8 +461,8 @@ class JianyingExporter:
                 self.app_status = "edit"
                 return True
 
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"窗口比较器异常: {control.Name}, err:{str(e)}")
 
         return False
 
