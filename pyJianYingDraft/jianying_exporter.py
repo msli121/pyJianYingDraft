@@ -78,7 +78,7 @@ class ControlFinder:
         for i in range(max_retries):
             try:
                 if control.Exists(0.5):
-                    control.Click(simulateMove=False)
+                    control.Click(simulateMove=True)
                     if delay > 0:
                         time.sleep(delay)
                     return True
@@ -159,11 +159,11 @@ class JianyingExporter:
         self._ensure_window_and_home()
 
         # 移动文件到指定路径
-        if output_path is not None and export_path:
-            try:
-                shutil.move(export_path, output_path)
-            except Exception as e:
-                print(f"移动文件失败: {e}")
+        try:
+            print(f"开始移动文件 {export_path} 至 {output_path}")
+            shutil.move(export_path, output_path)
+        except Exception as e:
+            print(f"移动文件失败: {e}")
 
         print(f"导出 {draft_name} 至 {output_path} 完成")
 

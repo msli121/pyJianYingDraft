@@ -73,10 +73,10 @@ class GoodStoryClipService:
 
     @staticmethod
     def generate_activity_video_one_step(req_data: GoodStoryClipReqInfo):
-        """一步到位生成活动视频片段"""
+        """一步到位生成活动视频成片"""
         output_info = JyTaskOutputInfo()
         try:
-            logger.info(f"一步到位生成活动视频片段：{req_data.activity_name}")
+            logger.info(f"一步到位生成活动视频成片：{req_data.activity_name}")
             # 下载素材
             GoodStoryClipService.download_activity_video_material(req_data)
             # 剪辑
@@ -91,7 +91,7 @@ class GoodStoryClipService:
             output_info.text_content = oss_url
             return output_info
         except Exception as e:
-            logger.error(f"一步到位生成活动视频片段失败：{e}", exc_info=True)
+            logger.error(f"一步到位生成活动视频成片 失败：{e}", exc_info=True)
             output_info.success = False
             output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
             output_info.task_message = str(e)
@@ -597,9 +597,10 @@ class GoodStoryClipService:
         """自动导出视频"""
         if not jy_draft_name or not video_save_path:
             raise Exception("导出视频失败：草稿名或保存路径不能为空")
+        logging.info(f"开始导出视频：{jy_draft_name} -> {video_save_path}")
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
         start_time = time.time()
         exporter = JianyingExporter()
         export_success = exporter.export_draft_in_thread(jy_draft_name, video_save_path)
-        logging.info(f"导出完成 耗时：{time.time() - start_time:.2f}秒")
+        logging.info(f"导出完成 导出结果：{export_success}, 耗时：{time.time() - start_time:.2f}秒")
         return export_success
