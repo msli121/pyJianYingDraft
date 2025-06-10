@@ -190,7 +190,8 @@ def jy_auto_cut(video_script_local_path, jy_draft_dir):
                                                  clip_settings=Clip_settings(transform_y=transform_y))
             style_reference.add_bubble("532597",
                                        "6797267554562740743")  # 添加文本气泡效果, 相应素材元数据的获取参见readme中"提取素材元数据"部分
-            style_reference.add_effect("7212892034623950141")
+            # 花字
+            # style_reference.add_effect("7212892034623950141")
             script.import_srt(srt_local_path,
                               track_name=subtitle_track_name,
                               time_offset=time_offset,
