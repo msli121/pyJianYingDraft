@@ -73,12 +73,12 @@ class ControlFinder:
         return False
 
     @staticmethod
-    def retry_click(control: uia.Control, max_retries: int = 3, delay: float = 0.3) -> bool:
+    def retry_click(control: uia.Control, max_retries: int = 5, delay: float = 0.5) -> bool:
         """重试点击控件，提高操作稳定性"""
         for i in range(max_retries):
             try:
                 if control.Exists(0.5):
-                    control.Click(simulateMove=True)
+                    control.Click(simulateMove=False)
                     if delay > 0:
                         time.sleep(delay)
                     return True
@@ -220,6 +220,7 @@ class JianyingExporter:
             return export_btn.Exists(0)
 
         if not ControlFinder.wait_for_control(find_export_btn, timeout=3.0):
+            print(f"未找到【导出】按钮")
             return False
 
         export_btn = self.app.TextControl(
