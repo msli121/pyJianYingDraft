@@ -247,10 +247,14 @@ class JianyingExporter:
         # 遍历直接子控件，查找所有 ClassName 为 "TitleBarButton" 的 GroupControl
         print("[进入导出页面] 正在查找标题栏导出按钮...")
         for control in self.app.GetChildren():
-            if control.ClassName == "TitleBarButton" and control.ControlType == uia.ControlType.TextControl:
+            if (
+                control.ClassName == "TitleBarButton"
+                and control.ControlType == uia.ControlType.TextControl
+            ):
                 text_bar_buttons.append(control)
                 # 打印找到的按钮信息，方便调试
                 # print(f"[切换到剪映主页] 找到标题栏关闭按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
+        uia.PaneControl()
 
         def find_export_btn():
             export_btn = self.app.TextControl(
@@ -480,10 +484,13 @@ class JianyingExporter:
             # 遍历直接子控件，查找所有 ClassName 为 "TitleBarButton" 的 GroupControl
             print("[切换到剪映主页] 正在查找标题栏关闭按钮...")
             for control in self.app.GetChildren():
-                if control.ClassName == "TitleBarButton" and control.ControlType == uia.ControlType.GroupControl:
+                if (
+                    control.ClassName == "TitleBarButton"
+                    and control.ControlType == uia.ControlType.GroupControl
+                ):
                     title_bar_buttons.append(control)
                     # 打印找到的按钮信息，方便调试
-                    #print(f"[切换到剪映主页] 找到标题栏关闭按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
+                    # print(f"[切换到剪映主页] 找到标题栏关闭按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
 
             if not title_bar_buttons:
                 print("[切换到剪映主页] 错误: 未找到任何标题栏按钮")
@@ -491,10 +498,14 @@ class JianyingExporter:
 
             # 找到最右侧的按钮（即通常的“X”关闭按钮）
             # 依据 BoundingRectangle.right 属性进行排序
-            title_bar_buttons.sort(key=lambda c: c.BoundingRectangle.right, reverse=True)
+            title_bar_buttons.sort(
+                key=lambda c: c.BoundingRectangle.right, reverse=True
+            )
             close_btn = title_bar_buttons[0]
-            print(f"[切换到剪映主页] 定位到最右侧按钮作为关闭按钮: Name={close_btn.Name}, ClassName={close_btn.ClassName}, Rect={close_btn.BoundingRectangle}")
-        
+            print(
+                f"[切换到剪映主页] 定位到最右侧按钮作为关闭按钮: Name={close_btn.Name}, ClassName={close_btn.ClassName}, Rect={close_btn.BoundingRectangle}"
+            )
+
             # close_btn = self.app.GroupControl(
             #     searchDepth=1, ClassName="TitleBarButton", foundIndex=3
             # )
