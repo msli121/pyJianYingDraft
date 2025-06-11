@@ -5,12 +5,15 @@ from datetime import datetime, timedelta
 from typing import Dict
 
 from flask import current_app
+from sqlalchemy.util.preloaded import sql_util
 
 from app.entity.jy_task import GoodStoryClipReqInfo
 from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum
 from app.models.biz import BizPlatformJyTask
 from app.service.good_story_clip_service import GoodStoryClipService
 from app.service.house_video_clip_service import handle_auto_clip_house_video
+from app.utils import sql_utils
+from app_config import AppConfig
 
 logger = logging.getLogger(__name__)
 
@@ -22,19 +25,24 @@ class TaskService:
         try:
             # 超时时间
             timeout_threshold = datetime.now() - timedelta(minutes=5)
-            filters = {
-                "task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value),
-                "start_time": ("lt", timeout_threshold)
-            }
-            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1, 100, filters=filters)
-            if task_count > 0:
-                logger.info(f"发现{task_count}个超时任务，正在标记为失败...")
-                for task in task_infos:
-                    cls.fail_task(
-                        task_id=task.get('id'),
-                        message="任务执行超时，强制终止"
-                    )
-            return task_count
+            task_infos = []
+            if not AppConfig.SYNC_DATA_BY_API:
+                filters = {
+                    "task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value),
+                    "start_time": ("lt", timeout_threshold)
+                }
+                _, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1, 100, filters=filters)
+            else:
+                # 超时时间
+                timeout_threshold_str = timeout_threshold.strftime('%Y-%m-%d %H:%M:%S')
+                # 查询超时任务
+                sql = f"select * from biz_platform_jy_task where task_status = {BizPlatformTaskStatusEnum.Doing.value} and start_time <= '{timeout_threshold_str}'"
+                task_infos = sql_utils.execute_sql(sql)
+            if task_infos and len(task_infos) > 0:
+                for task_info in task_infos:
+                    task_id = task_info.get('id')
+                    cls.fail_task(task_id)
+            return len(task_infos)
         except Exception as e:
             logger.error(f"检查超时任务发生错误: {str(e)}", exc_info=True)
             return 0
@@ -97,13 +105,13 @@ class TaskService:
         """处理房源视频剪辑任务"""
         task_output = handle_auto_clip_house_video(task_param)
         # 更新任务状态
-        BizPlatformJyTask.update(
-            id=task_id,
+        TaskService.update_jy_task(
+            task_id=task_id,
             task_status=task_output.task_status,
             task_message=task_output.task_message,
             task_result=task_output.text_content,
-            end_time=datetime.now()
         )
+
         return True
 
     @classmethod
@@ -112,13 +120,11 @@ class TaskService:
         req_data = GoodStoryClipReqInfo.from_dict(task_param)
         task_output = GoodStoryClipService.generate_good_story_clip_one_step(req_data)
         # 更新任务状态
-        BizPlatformJyTask.update(
-            id=task_id,
-            task_status=task_output.task_status,
-            task_message=task_output.task_message,
-            task_result=task_output.text_content,
-            end_time=datetime.now()
-        )
+        TaskService.update_jy_task(task_id=task_id,
+                                   task_status=task_output.task_status,
+                                   task_message=task_output.task_message,
+                                   task_result=task_output.text_content,
+                                   )
 
     @classmethod
     def _process_activity_video_task(cls, task_id: int, task_param: dict):
@@ -126,41 +132,74 @@ class TaskService:
         req_data = GoodStoryClipReqInfo.from_dict(task_param)
         task_output = GoodStoryClipService.generate_activity_video_one_step(req_data)
         # 更新任务状态
-        BizPlatformJyTask.update(
-            id=task_id,
-            task_status=task_output.task_status,
-            task_message=task_output.task_message,
-            task_result=task_output.text_content,
-            end_time=datetime.now()
-        )
+        TaskService.update_jy_task(task_id=task_id,
+                                   task_status=task_output.task_status,
+                                   task_message=task_output.task_message,
+                                   task_result=task_output.text_content,
+                                   )
+
+    @staticmethod
+    def update_jy_task(task_id, task_status, task_message, task_result):
+        """更新任务状态"""
+        if not AppConfig.SYNC_DATA_BY_API:
+            BizPlatformJyTask.update(
+                id=task_id,
+                task_status=task_status,
+                task_message=task_message,
+                task_result=task_result,
+                end_time=datetime.now(),
+            )
+        else:
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            sql = f"UPDATE biz_platform_jy_task SET task_status = '{task_status}', task_message = '{task_message}', task_result = '{task_result}', end_time = '{now_str}' WHERE id = {task_id}"
+            sql_res = sql_utils.execute_sql(sql)
+            logger.info(f"更新任务状态 sql_res:{sql_res}")
 
     @staticmethod
     def mark_task_doing(task_id: int):
         """标记任务为执行中状态"""
-        BizPlatformJyTask.update(
-            id=task_id,
-            task_status=BizPlatformTaskStatusEnum.Doing.value,
-            start_time=datetime.now(),
-            end_time=None,
-        )
+        if not AppConfig.SYNC_DATA_BY_API:
+            BizPlatformJyTask.update(
+                id=task_id,
+                task_status=BizPlatformTaskStatusEnum.Doing.value,
+                start_time=datetime.now(),
+                end_time=None,
+            )
+        else:
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            sql = f"UPDATE biz_platform_jy_task SET task_status = {BizPlatformTaskStatusEnum.Doing.value}, start_time = '{now_str}', end_time=null WHERE id = {task_id}"
+            sql_res = sql_utils.execute_sql(sql)
+            logger.info(f"标记任务为执行中状态 sql_res:{sql_res}")
 
     @staticmethod
     def fail_task(task_id: int, message: str = ""):
         """标记任务为失败状态"""
-        BizPlatformJyTask.update(
-            id=task_id,
-            task_status=BizPlatformTaskStatusEnum.DoneFail.value,
-            task_message=message,
-            end_time=datetime.now(),
-        )
+        if not AppConfig.SYNC_DATA_BY_API:
+            BizPlatformJyTask.update(
+                id=task_id,
+                task_status=BizPlatformTaskStatusEnum.DoneFail.value,
+                task_message=message,
+                end_time=datetime.now(),
+            )
+        else:
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            sql = f"UPDATE biz_platform_jy_task SET task_status = {BizPlatformTaskStatusEnum.DoneFail.value}, task_message = '{message}', end_time = '{now_str}' WHERE id = {task_id}"
+            sql_res = sql_utils.execute_sql(sql)
+            logger.info(f"标记任务为失败状态 sql_res:{sql_res}")
 
     @staticmethod
     def success_task(task_id: int, task_result: str = ""):
         """标记任务为成功状态"""
-        BizPlatformJyTask.update(
-            id=task_id,
-            task_status=BizPlatformTaskStatusEnum.DoneSuccess.value,
-            task_message=BizPlatformTaskStatusEnum.DoneSuccess.desc,
-            task_result=task_result,
-            end_time=datetime.now(),
-        )
+        if not AppConfig.SYNC_DATA_BY_API:
+            BizPlatformJyTask.update(
+                id=task_id,
+                task_status=BizPlatformTaskStatusEnum.DoneSuccess.value,
+                task_message=BizPlatformTaskStatusEnum.DoneSuccess.desc,
+                task_result=task_result,
+                end_time=datetime.now(),
+            )
+        else:
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            sql = f"UPDATE biz_platform_jy_task SET task_status = {BizPlatformTaskStatusEnum.DoneSuccess.value}, task_message = '{BizPlatformTaskStatusEnum.DoneSuccess.desc}', task_result = '{task_result}', end_time = '{now_str}' WHERE id = {task_id}"
+            sql_res = sql_utils.execute_sql(sql)
+            logger.info(f"标记任务为成功状态 sql_res:{sql_res}")
