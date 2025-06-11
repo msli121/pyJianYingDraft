@@ -245,7 +245,7 @@ class JianyingExporter:
 
         text_bar_buttons = []
         # 遍历直接子控件，查找所有 ClassName 为 "TitleBarButton" 的 GroupControl
-        print("[切换到剪映主页] 正在查找标题栏关闭按钮...")
+        print("[进入导出页面] 正在查找标题栏导出按钮...")
         for control in self.app.GetChildren():
             if control.ClassName == "TitleBarButton" and control.ControlType == uia.ControlType.TextControl:
                 text_bar_buttons.append(control)
