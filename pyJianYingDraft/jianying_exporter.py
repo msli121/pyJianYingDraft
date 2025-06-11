@@ -96,8 +96,7 @@ class ControlFinder:
         for i in range(max_retries):
             try:
                 if control.Exists(0.5):
-                    click_result = control.Click(simulateMove=False)
-                    print(f"click_result: {click_result}")
+                    control.Click(simulateMove=False)
                     if delay > 0:
                         time.sleep(delay)
                     return True
@@ -260,7 +259,31 @@ class JianyingExporter:
             Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
         )
 
-        return ControlFinder.retry_click(export_btn, delay=0.5)
+        click_res = ControlFinder.retry_click(export_btn, delay=0.5)
+        if not click_res:
+            return click_res
+        # 校验导出页面是否出现
+        for i in range(3):
+            if self._wait_for_export_page_ready():
+                return True
+        return False
+
+    def _wait_for_export_page_ready(self) -> bool:
+        """等待导出页面加载完成，通过检查导出路径控件是否存在来判断"""
+        print("正在等待导出页面加载完成...")
+
+        def find_export_path_control():
+            export_path_sib = self.app.TextControl(
+                searchDepth=2, Compare=ControlFinder.desc_matcher("ExportPath")
+            )
+            return export_path_sib.Exists(0)
+
+        if ControlFinder.wait_for_control(find_export_path_control, timeout=3.0):
+            print("导出页面已加载，【导出路径】控件已找到")
+            return True
+        else:
+            print("导出页面未能在指定时间内加载或【导出路径】控件未找到")
+            return False
 
     def _get_export_path(self) -> Optional[str]:
         """获取导出路径"""
@@ -442,6 +465,9 @@ class JianyingExporter:
             ControlFinder.send_esc_key()
             time.sleep(0.5)
             self.app_status = "edit"
+
+        for control in self.app.GetChildren():
+            print(f"Name: {control.Name}, ClassName: {control.ClassName}, ControlType: {control.ControlType}, full_description: {control.full_description}")
 
         try:
             close_btn = self.app.GroupControl(
