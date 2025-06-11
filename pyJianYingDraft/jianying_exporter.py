@@ -3,11 +3,14 @@
 import os
 import shutil
 import time
+import logging
 from enum import Enum
 from typing import Optional, Literal, Callable
 
 import uiautomation as uia
 import pyautogui
+
+logger = logging.getLogger(__name__)
 
 
 class Export_resolution(Enum):
@@ -261,32 +264,17 @@ class JianyingExporter:
             )
             return export_btn.Exists(0)
 
-        def find_export_btn_classname():
-            export_btn = self.app.GroupControl(
-                searchDepth=1,
-                Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE"),
-            )
-            return export_btn.Exists(0)
+
 
         if not ControlFinder.wait_for_control(find_export_btn, timeout=3.0):
-            print(f"[find_export_btn] 未找到【导出】按钮")
-            if not ControlFinder.wait_for_control(find_export_btn_classname, timeout=3.0):
-                print(f"[find_export_btn_classname] 未找到【导出】按钮")
-                return False
-            else:
-                print(f"[find_export_btn_classname] 找到【导出】按钮")
-                export_btn = self.app.GroupControl(
-                    searchDepth=1,
-                    Compare=ControlFinder.class_name_matcher(
-                        "PanelSettingsGroup_QMLTYPE"
-                    ),
-                )
-        else:
-            print(f"[find_export_btn] 找到【导出】按钮")
-            export_btn = self.app.TextControl(
-                searchDepth=2,
-                Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
-            )
+            logger.error(f"[find_export_btn] 未找到【导出】按钮")
+            return False
+
+        logger.info(f"[find_export_btn] 找到【导出】按钮")
+        export_btn = self.app.TextControl(
+            searchDepth=2,
+            Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
+        )
 
         click_res = ControlFinder.retry_click(export_btn, delay=0.5)
         if not click_res:
