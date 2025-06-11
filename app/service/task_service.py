@@ -3,10 +3,6 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Dict
-
-from flask import current_app
-from sqlalchemy.util.preloaded import sql_util
-
 from app.entity.jy_task import GoodStoryClipReqInfo
 from app.enum.biz import BizPlatformTaskStatusEnum, BizPlatformJyTaskTypeEnum
 from app.models.biz import BizPlatformJyTask
@@ -36,13 +32,13 @@ class TaskService:
                 # 超时时间
                 timeout_threshold_str = timeout_threshold.strftime('%Y-%m-%d %H:%M:%S')
                 # 查询超时任务
-                sql = f"select * from biz_platform_jy_task where task_status = {BizPlatformTaskStatusEnum.Doing.value} and start_time <= '{timeout_threshold_str}'"
+                sql = f"select * from biz_platform_jy_task where task_status = '{BizPlatformTaskStatusEnum.Doing.value}' and start_time <= '{timeout_threshold_str}'"
                 task_infos = sql_utils.execute_sql(sql)
             if task_infos and len(task_infos) > 0:
                 for task_info in task_infos:
                     task_id = task_info.get('id')
                     cls.fail_task(task_id)
-            return len(task_infos)
+            return len(task_infos) if task_infos else 0
         except Exception as e:
             logger.error(f"检查超时任务发生错误: {str(e)}", exc_info=True)
             return 0
@@ -51,27 +47,10 @@ class TaskService:
     def process_next_task(cls):
         """处理下一个待执行任务"""
         try:
-            # filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value)}
-            # task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
-            #                                                                              1,
-            #                                                                              filters=filters)
-            # if task_count > 0:
-            #     task_info = task_infos[0]
-            #     logger.info(f"当前有任务在执行 task_id:{task_info.get('id')}, task_name:{task_info.get('task_name')}")
-            #     return None
-            filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Pending.value)}
-            orders = [
-                {"key": "task_priority", "value": "desc"},
-                {"key": "create_time", "value": "asc"}
-            ]
-            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
-                                                                                         1,
-                                                                                         filters=filters,
-                                                                                         orders=orders)
-            if task_count == 0:
-                # logger.info(f"没有待执行的任务")
+            task = cls.get_next_task()
+            if not task:
+                # logger.info(f"当前没有待执行任务")
                 return None
-            task = task_infos[0]
             return cls.process_single_task(task)
         except Exception as e:
             logger.error(f"获取任务失败: {str(e)}", exc_info=True)
@@ -138,6 +117,30 @@ class TaskService:
                                    task_result=task_output.text_content,
                                    )
 
+    @classmethod
+    def get_next_task(cls):
+        """获取下一个待执行任务"""
+        if not AppConfig.SYNC_DATA_BY_API:
+            filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Pending.value)}
+            orders = [
+                {"key": "task_priority", "value": "desc"},
+                {"key": "create_time", "value": "asc"}
+            ]
+            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
+                                                                                         1,
+                                                                                         filters=filters,
+                                                                                         orders=orders)
+            if task_count == 0:
+                # logger.info(f"没有待执行的任务")
+                return None
+            return task_infos[0]
+        else:
+            sql = f"SELECT * FROM biz_platform_jy_task WHERE task_status = '{BizPlatformTaskStatusEnum.Pending.value}' ORDER BY task_priority DESC, create_time ASC LIMIT 1"
+            task_infos = sql_utils.execute_sql(sql)
+            if task_infos and len(task_infos) > 0:
+                return task_infos[0]
+            return None
+
     @staticmethod
     def update_jy_task(task_id, task_status, task_message, task_result):
         """更新任务状态"""
@@ -183,7 +186,7 @@ class TaskService:
             )
         else:
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            sql = f"UPDATE biz_platform_jy_task SET task_status = {BizPlatformTaskStatusEnum.DoneFail.value}, task_message = '{message}', end_time = '{now_str}' WHERE id = {task_id}"
+            sql = f"UPDATE biz_platform_jy_task SET task_status = '{BizPlatformTaskStatusEnum.DoneFail.value}', task_message = '{message}', end_time = '{now_str}' WHERE id = {task_id}"
             sql_res = sql_utils.execute_sql(sql)
             logger.info(f"标记任务为失败状态 sql_res:{sql_res}")
 
@@ -200,6 +203,6 @@ class TaskService:
             )
         else:
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            sql = f"UPDATE biz_platform_jy_task SET task_status = {BizPlatformTaskStatusEnum.DoneSuccess.value}, task_message = '{BizPlatformTaskStatusEnum.DoneSuccess.desc}', task_result = '{task_result}', end_time = '{now_str}' WHERE id = {task_id}"
+            sql = f"UPDATE biz_platform_jy_task SET task_status = '{BizPlatformTaskStatusEnum.DoneSuccess.value}', task_message = '{BizPlatformTaskStatusEnum.DoneSuccess.desc}', task_result = '{task_result}', end_time = '{now_str}' WHERE id = {task_id}"
             sql_res = sql_utils.execute_sql(sql)
             logger.info(f"标记任务为成功状态 sql_res:{sql_res}")

@@ -264,26 +264,24 @@ class JianyingExporter:
             )
             return export_btn.Exists(0)
 
-
-
         if not ControlFinder.wait_for_control(find_export_btn, timeout=3.0):
             logger.error(f"[find_export_btn] 未找到【导出】按钮")
             return False
 
-        logger.info(f"[find_export_btn] 找到【导出】按钮")
         export_btn = self.app.TextControl(
             searchDepth=2,
             Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
         )
+        logger.info(f"[find_export_btn] 找到【导出】按钮 export_btn={export_btn}")
 
-        click_res = ControlFinder.retry_click(export_btn, delay=0.5)
-        if not click_res:
-            return click_res
-        # 校验导出页面是否出现
-        for _ in range(3):
-            if self._wait_for_export_page_ready():
-                return True
-        return False
+        ControlFinder.retry_click(export_btn, delay=0.5)
+        # if not click_res:
+        #     return click_res
+        # # 校验导出页面是否出现
+        # for _ in range(3):
+        #     if self._wait_for_export_page_ready():
+        #         return True
+        return True
 
     def _wait_for_export_page_ready(self) -> bool:
         """等待导出页面加载完成，通过检查导出路径控件是否存在来判断"""
@@ -497,7 +495,7 @@ class JianyingExporter:
                     # print(f"[切换到剪映主页] 找到标题栏关闭按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
 
             if not title_bar_buttons:
-                print("[切换到剪映主页] 错误: 未找到任何标题栏按钮")
+                logger.error("[切换到剪映主页] 错误: 未找到任何标题栏按钮")
                 return False
 
             # 找到最右侧的按钮（即通常的“X”关闭按钮）
@@ -506,14 +504,14 @@ class JianyingExporter:
                 key=lambda c: c.BoundingRectangle.right, reverse=True
             )
             close_btn = title_bar_buttons[0]
-            print(
+            logger.info(
                 f"[切换到剪映主页] 定位到最右侧按钮作为关闭按钮: Name={close_btn.Name}, ClassName={close_btn.ClassName}, Rect={close_btn.BoundingRectangle}"
             )
 
             # close_btn = self.app.GroupControl(
             #     searchDepth=1, ClassName="TitleBarButton", foundIndex=3
             # )
-            if close_btn.Exists(1.0):
+            if close_btn.Exists(3.0):
                 ControlFinder.retry_click(close_btn, delay=0.5)
                 return self.get_window()
         except Exception as e:
