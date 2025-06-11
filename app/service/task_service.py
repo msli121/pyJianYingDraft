@@ -43,14 +43,14 @@ class TaskService:
     def process_next_task(cls):
         """处理下一个待执行任务"""
         try:
-            filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value)}
-            task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
-                                                                                         1,
-                                                                                         filters=filters)
-            if task_count > 0:
-                task_info = task_infos[0]
-                logger.info(f"当前有任务在执行 task_id:{task_info.get('id')}, task_name:{task_info.get('task_name')}")
-                return None
+            # filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value)}
+            # task_count, task_infos = BizPlatformJyTask.query_with_filters_and_pagination(1,
+            #                                                                              1,
+            #                                                                              filters=filters)
+            # if task_count > 0:
+            #     task_info = task_infos[0]
+            #     logger.info(f"当前有任务在执行 task_id:{task_info.get('id')}, task_name:{task_info.get('task_name')}")
+            #     return None
             filters = {"task_status": ("eq", BizPlatformTaskStatusEnum.Pending.value)}
             orders = [
                 {"key": "task_priority", "value": "desc"},
@@ -76,7 +76,7 @@ class TaskService:
         try:
             # 标记任务正在执行
             cls.mark_task_doing(task_id)
-
+            logger.info(f"开始处理任务 task_id:{task_id} task_name:{task.get('task_name')}")
             task_type = task.get('task_type')
             task_param = json.loads(task.get('task_param'))
 

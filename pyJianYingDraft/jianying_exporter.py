@@ -78,7 +78,8 @@ class ControlFinder:
         for i in range(max_retries):
             try:
                 if control.Exists(0.5):
-                    control.Click(simulateMove=False)
+                    click_result = control.Click(simulateMove=False)
+                    print(f"click_result: {click_result}")
                     if delay > 0:
                         time.sleep(delay)
                     return True
