@@ -36,7 +36,7 @@ class ControlFinder:
 
     @staticmethod
     def desc_matcher(
-        target_desc: str, depth: int = 2, exact: bool = False
+            target_desc: str, depth: int = 2, exact: bool = False
     ) -> Callable[[uia.Control, int], bool]:
         """根据full_description查找控件的匹配器"""
         target_desc = target_desc.lower()
@@ -56,7 +56,7 @@ class ControlFinder:
 
     @staticmethod
     def class_name_matcher(
-        class_name: str, depth: int = 1, exact: bool = False
+            class_name: str, depth: int = 1, exact: bool = False
     ) -> Callable[[uia.Control, int], bool]:
         """根据ClassName查找控件的匹配器"""
         class_name = class_name.lower()
@@ -78,7 +78,7 @@ class ControlFinder:
 
     @staticmethod
     def wait_for_control(
-        control_finder: Callable, timeout: float = 5.0, interval: float = 0.2
+            control_finder: Callable, timeout: float = 5.0, interval: float = 0.2
     ) -> bool:
         """等待控件出现，提高查找稳定性"""
         start_time = time.time()
@@ -90,7 +90,7 @@ class ControlFinder:
 
     @staticmethod
     def retry_click(
-        control: uia.Control, max_retries: int = 5, delay: float = 0.5
+            control: uia.Control, max_retries: int = 5, delay: float = 0.5
     ) -> bool:
         """重试点击控件，提高操作稳定性"""
         for i in range(max_retries):
@@ -125,13 +125,13 @@ class JianyingExporter:
         pass
 
     def export_draft(
-        self,
-        draft_name: str,
-        output_path: Optional[str] = None,
-        *,
-        resolution: Optional[Export_resolution] = None,
-        framerate: Optional[Export_framerate] = None,
-        timeout: float = 60,
+            self,
+            draft_name: str,
+            output_path: Optional[str] = None,
+            *,
+            resolution: Optional[Export_resolution] = None,
+            framerate: Optional[Export_framerate] = None,
+            timeout: float = 60,
     ) -> None:
         """导出指定的剪映草稿, **目前仅支持剪映6及以下版本**
 
@@ -191,7 +191,7 @@ class JianyingExporter:
         print(f"导出 {draft_name} 至 {output_path} 完成")
 
     def export_draft_in_thread(
-        self, draft_name: str, output_path: Optional[str] = None, timeout: float = 1200
+            self, draft_name: str, output_path: Optional[str] = None, timeout: float = 1200
     ) -> bool:
         """在线程中导出指定的剪映草稿"""
         try:
@@ -244,17 +244,15 @@ class JianyingExporter:
             return False
 
         text_bar_buttons = []
+
         # 遍历直接子控件，查找所有 ClassName 为 "TitleBarButton" 的 GroupControl
-        print("[进入导出页面] 正在查找标题栏导出按钮...")
-        for control in self.app.GetChildren():
-            if (
-                control.ClassName == "TitleBarButton"
-                and control.ControlType == uia.ControlType.TextControl
-            ):
-                text_bar_buttons.append(control)
-                # 打印找到的按钮信息，方便调试
-                # print(f"[切换到剪映主页] 找到标题栏关闭按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
-        uia.PaneControl()
+        # print("[进入导出页面] 正在查找标题栏导出按钮...")
+        # for control in self.app.GetChildren():
+        #     if (
+        #         control.ClassName == "TitleBarButton"
+        #         and control.ControlType == uia.ControlType.TextControl
+        #     ):
+        #         text_bar_buttons.append(control)
 
         def find_export_btn():
             export_btn = self.app.TextControl(
@@ -263,20 +261,38 @@ class JianyingExporter:
             )
             return export_btn.Exists(0)
 
-        if not ControlFinder.wait_for_control(find_export_btn, timeout=3.0):
-            print(f"未找到【导出】按钮")
-            return False
+        def find_export_btn_classname():
+            export_btn = self.app.GroupControl(
+                searchDepth=1,
+                Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE"),
+            )
+            return export_btn.Exists(0)
 
-        export_btn = self.app.TextControl(
-            searchDepth=2,
-            Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
-        )
+        if not ControlFinder.wait_for_control(find_export_btn, timeout=3.0):
+            print(f"[find_export_btn] 未找到【导出】按钮")
+            if not ControlFinder.wait_for_control(find_export_btn_classname, timeout=3.0):
+                print(f"[find_export_btn_classname] 未找到【导出】按钮")
+                return False
+            else:
+                print(f"[find_export_btn_classname] 找到【导出】按钮")
+                export_btn = self.app.GroupControl(
+                    searchDepth=1,
+                    Compare=ControlFinder.class_name_matcher(
+                        "PanelSettingsGroup_QMLTYPE"
+                    ),
+                )
+        else:
+            print(f"[find_export_btn] 找到【导出】按钮")
+            export_btn = self.app.TextControl(
+                searchDepth=2,
+                Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
+            )
 
         click_res = ControlFinder.retry_click(export_btn, delay=0.5)
         if not click_res:
             return click_res
         # 校验导出页面是否出现
-        for i in range(3):
+        for _ in range(3):
             if self._wait_for_export_page_ready():
                 return True
         return False
@@ -325,9 +341,9 @@ class JianyingExporter:
         return None
 
     def _set_export_settings(
-        self,
-        resolution: Optional[Export_resolution],
-        framerate: Optional[Export_framerate],
+            self,
+            resolution: Optional[Export_resolution],
+            framerate: Optional[Export_framerate],
     ) -> None:
         """设置导出参数"""
 
@@ -356,7 +372,7 @@ class JianyingExporter:
             self._set_framerate(setting_group, framerate)
 
     def _set_resolution(
-        self, setting_group: uia.Control, resolution: Export_resolution
+            self, setting_group: uia.Control, resolution: Export_resolution
     ) -> None:
         """设置分辨率"""
         try:
@@ -385,7 +401,7 @@ class JianyingExporter:
             print(f"设置分辨率失败: {e}")
 
     def _set_framerate(
-        self, setting_group: uia.Control, framerate: Export_framerate
+            self, setting_group: uia.Control, framerate: Export_framerate
     ) -> None:
         """设置帧率"""
         try:
@@ -485,8 +501,8 @@ class JianyingExporter:
             print("[切换到剪映主页] 正在查找标题栏关闭按钮...")
             for control in self.app.GetChildren():
                 if (
-                    control.ClassName == "TitleBarButton"
-                    and control.ControlType == uia.ControlType.GroupControl
+                        control.ClassName == "TitleBarButton"
+                        and control.ControlType == uia.ControlType.GroupControl
                 ):
                     title_bar_buttons.append(control)
                     # 打印找到的按钮信息，方便调试
