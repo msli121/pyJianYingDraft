@@ -1,4 +1,5 @@
 """剪映自动化控制，主要与自动导出有关"""
+
 import os
 import shutil
 import time
@@ -8,8 +9,10 @@ from typing import Optional, Literal, Callable
 import uiautomation as uia
 import pyautogui
 
+
 class Export_resolution(Enum):
     """导出分辨率"""
+
     RES_8K = "8K"
     RES_4K = "4K"
     RES_2K = "2K"
@@ -20,6 +23,7 @@ class Export_resolution(Enum):
 
 class Export_framerate(Enum):
     """导出帧率"""
+
     FR_24 = "24fps"
     FR_25 = "25fps"
     FR_30 = "30fps"
@@ -31,7 +35,9 @@ class ControlFinder:
     """控件查找器，封装部分与控件查找相关的逻辑"""
 
     @staticmethod
-    def desc_matcher(target_desc: str, depth: int = 2, exact: bool = False) -> Callable[[uia.Control, int], bool]:
+    def desc_matcher(
+        target_desc: str, depth: int = 2, exact: bool = False
+    ) -> Callable[[uia.Control, int], bool]:
         """根据full_description查找控件的匹配器"""
         target_desc = target_desc.lower()
 
@@ -40,14 +46,18 @@ class ControlFinder:
                 return False
             try:
                 full_desc: str = control.GetPropertyValue(30159).lower()
-                return (target_desc == full_desc) if exact else (target_desc in full_desc)
+                return (
+                    (target_desc == full_desc) if exact else (target_desc in full_desc)
+                )
             except:
                 return False
 
         return matcher
 
     @staticmethod
-    def class_name_matcher(class_name: str, depth: int = 1, exact: bool = False) -> Callable[[uia.Control, int], bool]:
+    def class_name_matcher(
+        class_name: str, depth: int = 1, exact: bool = False
+    ) -> Callable[[uia.Control, int], bool]:
         """根据ClassName查找控件的匹配器"""
         class_name = class_name.lower()
 
@@ -56,14 +66,20 @@ class ControlFinder:
                 return False
             try:
                 curr_class_name: str = control.ClassName.lower()
-                return (class_name == curr_class_name) if exact else (class_name in curr_class_name)
+                return (
+                    (class_name == curr_class_name)
+                    if exact
+                    else (class_name in curr_class_name)
+                )
             except:
                 return False
 
         return matcher
 
     @staticmethod
-    def wait_for_control(control_finder: Callable, timeout: float = 5.0, interval: float = 0.2) -> bool:
+    def wait_for_control(
+        control_finder: Callable, timeout: float = 5.0, interval: float = 0.2
+    ) -> bool:
         """等待控件出现，提高查找稳定性"""
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -73,7 +89,9 @@ class ControlFinder:
         return False
 
     @staticmethod
-    def retry_click(control: uia.Control, max_retries: int = 5, delay: float = 0.5) -> bool:
+    def retry_click(
+        control: uia.Control, max_retries: int = 5, delay: float = 0.5
+    ) -> bool:
         """重试点击控件，提高操作稳定性"""
         for i in range(max_retries):
             try:
@@ -93,7 +111,7 @@ class ControlFinder:
     def send_esc_key() -> None:
         """发送ESC键"""
         print("按下ESC键")
-        pyautogui.press('esc')
+        pyautogui.press("esc")
 
 
 class JianyingExporter:
@@ -107,10 +125,15 @@ class JianyingExporter:
         """初始化剪映控制器, 此时剪映应该处于目录页"""
         pass
 
-    def export_draft(self, draft_name: str, output_path: Optional[str] = None, *,
-                     resolution: Optional[Export_resolution] = None,
-                     framerate: Optional[Export_framerate] = None,
-                     timeout: float = 60) -> None:
+    def export_draft(
+        self,
+        draft_name: str,
+        output_path: Optional[str] = None,
+        *,
+        resolution: Optional[Export_resolution] = None,
+        framerate: Optional[Export_framerate] = None,
+        timeout: float = 60,
+    ) -> None:
         """导出指定的剪映草稿, **目前仅支持剪映6及以下版本**
 
         **注意: 需要确认有导出草稿的权限(不使用VIP功能或已开通VIP), 否则可能陷入死循环**
@@ -168,11 +191,15 @@ class JianyingExporter:
 
         print(f"导出 {draft_name} 至 {output_path} 完成")
 
-    def export_draft_in_thread(self, draft_name: str, output_path: Optional[str] = None, timeout: float = 1200) -> bool:
+    def export_draft_in_thread(
+        self, draft_name: str, output_path: Optional[str] = None, timeout: float = 1200
+    ) -> bool:
         """在线程中导出指定的剪映草稿"""
         try:
             with uia.UIAutomationInitializerInThread(debug=True):
-                self.export_draft(draft_name=draft_name, output_path=output_path, timeout=timeout)
+                self.export_draft(
+                    draft_name=draft_name, output_path=output_path, timeout=timeout
+                )
             return True
         except Exception as e:
             print(f"在 export_draft_in_thread 中捕获到异常: {e}")
@@ -190,7 +217,9 @@ class JianyingExporter:
         def find_draft():
             draft_name_text = self.app.TextControl(
                 searchDepth=2,
-                Compare=ControlFinder.desc_matcher(f"HomePageDraftTitle:{draft_name}", exact=True)
+                Compare=ControlFinder.desc_matcher(
+                    f"HomePageDraftTitle:{draft_name}", exact=True
+                ),
             )
             return draft_name_text.Exists(0)
 
@@ -199,7 +228,9 @@ class JianyingExporter:
 
         draft_name_text = self.app.TextControl(
             searchDepth=2,
-            Compare=ControlFinder.desc_matcher(f"HomePageDraftTitle:{draft_name}", exact=True)
+            Compare=ControlFinder.desc_matcher(
+                f"HomePageDraftTitle:{draft_name}", exact=True
+            ),
         )
 
         draft_btn = draft_name_text.GetParentControl()
@@ -216,7 +247,7 @@ class JianyingExporter:
         def find_export_btn():
             export_btn = self.app.TextControl(
                 searchDepth=2,
-                Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn")
+                Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
             )
             return export_btn.Exists(0)
 
@@ -226,7 +257,7 @@ class JianyingExporter:
 
         export_btn = self.app.TextControl(
             searchDepth=2,
-            Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn")
+            Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
         )
 
         return ControlFinder.retry_click(export_btn, delay=0.5)
@@ -238,8 +269,7 @@ class JianyingExporter:
 
         def find_export_path():
             export_path_sib = self.app.TextControl(
-                searchDepth=2,
-                Compare=ControlFinder.desc_matcher("ExportPath")
+                searchDepth=2, Compare=ControlFinder.desc_matcher("ExportPath")
             )
             return export_path_sib.Exists(0)
 
@@ -248,8 +278,7 @@ class JianyingExporter:
 
         try:
             export_path_sib = self.app.TextControl(
-                searchDepth=2,
-                Compare=ControlFinder.desc_matcher("ExportPath")
+                searchDepth=2, Compare=ControlFinder.desc_matcher("ExportPath")
             )
             export_path_text = export_path_sib.GetSiblingControl(lambda ctrl: True)
             if export_path_text:
@@ -259,14 +288,17 @@ class JianyingExporter:
 
         return None
 
-    def _set_export_settings(self, resolution: Optional[Export_resolution],
-                             framerate: Optional[Export_framerate]) -> None:
+    def _set_export_settings(
+        self,
+        resolution: Optional[Export_resolution],
+        framerate: Optional[Export_framerate],
+    ) -> None:
         """设置导出参数"""
 
         def find_setting_group():
             setting_group = self.app.GroupControl(
                 searchDepth=1,
-                Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE")
+                Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE"),
             )
             return setting_group.Exists(0)
 
@@ -276,7 +308,7 @@ class JianyingExporter:
 
         setting_group = self.app.GroupControl(
             searchDepth=1,
-            Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE")
+            Compare=ControlFinder.class_name_matcher("PanelSettingsGroup_QMLTYPE"),
         )
 
         # 设置分辨率
@@ -287,12 +319,14 @@ class JianyingExporter:
         if framerate is not None:
             self._set_framerate(setting_group, framerate)
 
-    def _set_resolution(self, setting_group: uia.Control, resolution: Export_resolution) -> None:
+    def _set_resolution(
+        self, setting_group: uia.Control, resolution: Export_resolution
+    ) -> None:
         """设置分辨率"""
         try:
             resolution_btn = setting_group.TextControl(
                 searchDepth=2,
-                Compare=ControlFinder.desc_matcher("ExportSharpnessInput")
+                Compare=ControlFinder.desc_matcher("ExportSharpnessInput"),
             )
 
             if not resolution_btn.Exists(1.0):
@@ -304,8 +338,7 @@ class JianyingExporter:
                 return
 
             resolution_item = self.app.TextControl(
-                searchDepth=2,
-                Compare=ControlFinder.desc_matcher(resolution.value)
+                searchDepth=2, Compare=ControlFinder.desc_matcher(resolution.value)
             )
 
             if resolution_item.Exists(1.0):
@@ -315,12 +348,13 @@ class JianyingExporter:
         except Exception as e:
             print(f"设置分辨率失败: {e}")
 
-    def _set_framerate(self, setting_group: uia.Control, framerate: Export_framerate) -> None:
+    def _set_framerate(
+        self, setting_group: uia.Control, framerate: Export_framerate
+    ) -> None:
         """设置帧率"""
         try:
             framerate_btn = setting_group.TextControl(
-                searchDepth=2,
-                Compare=ControlFinder.desc_matcher("FrameRateInput")
+                searchDepth=2, Compare=ControlFinder.desc_matcher("FrameRateInput")
             )
 
             if not framerate_btn.Exists(1.0):
@@ -332,8 +366,7 @@ class JianyingExporter:
                 return
 
             framerate_item = self.app.TextControl(
-                searchDepth=2,
-                Compare=ControlFinder.desc_matcher(framerate.value)
+                searchDepth=2, Compare=ControlFinder.desc_matcher(framerate.value)
             )
 
             if framerate_item.Exists(1.0):
@@ -349,7 +382,7 @@ class JianyingExporter:
         def find_export_btn():
             export_btn = self.app.TextControl(
                 searchDepth=2,
-                Compare=ControlFinder.desc_matcher("ExportOkBtn", exact=True)
+                Compare=ControlFinder.desc_matcher("ExportOkBtn", exact=True),
             )
             return export_btn.Exists(0)
 
@@ -357,8 +390,7 @@ class JianyingExporter:
             return False
 
         export_btn = self.app.TextControl(
-            searchDepth=2,
-            Compare=ControlFinder.desc_matcher("ExportOkBtn", exact=True)
+            searchDepth=2, Compare=ControlFinder.desc_matcher("ExportOkBtn", exact=True)
         )
 
         return ControlFinder.retry_click(export_btn, delay=1.0)
@@ -379,7 +411,7 @@ class JianyingExporter:
 
             succeed_close_btn = self.app.TextControl(
                 searchDepth=2,
-                Compare=ControlFinder.desc_matcher("ExportSucceedCloseBtn")
+                Compare=ControlFinder.desc_matcher("ExportSucceedCloseBtn"),
             )
 
             if succeed_close_btn.Exists(0):
@@ -387,7 +419,7 @@ class JianyingExporter:
                 ControlFinder.send_esc_key()
                 time.sleep(0.5)
                 # 编辑状态
-                self.app_status = 'edit'
+                self.app_status = "edit"
                 return True
 
             time.sleep(check_interval)
@@ -396,7 +428,7 @@ class JianyingExporter:
         ControlFinder.send_esc_key()
         time.sleep(0.5)
         # 编辑状态
-        self.app_status = 'edit'
+        self.app_status = "edit"
         return False
 
     def switch_to_home(self) -> bool:
@@ -409,10 +441,12 @@ class JianyingExporter:
             print("警告: 当前不在编辑模式，通过ESC回到编辑模型")
             ControlFinder.send_esc_key()
             time.sleep(0.5)
-            self.app_status = 'edit'
+            self.app_status = "edit"
 
         try:
-            close_btn = self.app.GroupControl(searchDepth=1, ClassName="TitleBarButton", foundIndex=3)
+            close_btn = self.app.GroupControl(
+                searchDepth=1, ClassName="TitleBarButton", foundIndex=3
+            )
             if close_btn.Exists(1.0):
                 ControlFinder.retry_click(close_btn, delay=0.5)
                 return self.get_window()
@@ -429,7 +463,9 @@ class JianyingExporter:
                 self.app.SetTopmost(False)
 
             # 查找剪映窗口
-            self.app = uia.WindowControl(searchDepth=1, Compare=self.__jianying_window_cmp)
+            self.app = uia.WindowControl(
+                searchDepth=1, Compare=self.__jianying_window_cmp
+            )
             if not self.app.Exists(2.0):  # 增加等待时间
                 return False
 
@@ -443,6 +479,13 @@ class JianyingExporter:
             self.app.SetActive()
             self.app.SetTopmost()
             print(f"获取窗口成功，窗口当前状态：{self.app_status}")
+
+            # # 确保窗口处于正常大小，避免最大化或全屏（如果可能）
+            # # Constants.WindowVisualState.Normal 表示正常（非最小化、非最大化）状态
+            # if self.app.GetWindowVisualState() != uia.Constants.WindowVisualState.Normal:
+            #     self.app.SetWindowState(uia.Constants.WindowVisualState.Normal)
+            #     print("已将剪映窗口设置为正常大小")
+
             return True
 
         except Exception as e:
@@ -469,11 +512,13 @@ class JianyingExporter:
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exporter = JianyingExporter()
-    draft_name = '自动化剪辑'
+    draft_name = "自动化剪辑"
     for i in range(100):
-        video_save_path = os.path.join('C:\\Users\\Administrator\\Desktop\\自动化剪辑', f"{draft_name}_{i}.mp4")
+        video_save_path = os.path.join(
+            "C:\\Users\\Administrator\\Desktop\\自动化剪辑", f"{draft_name}_{i}.mp4"
+        )
         start_time = time.time()
         export_success = exporter.export_draft_in_thread(draft_name, video_save_path)
         print(f"导出结果 第{i}个 耗时: {time.time() - start_time:.2f}秒")
