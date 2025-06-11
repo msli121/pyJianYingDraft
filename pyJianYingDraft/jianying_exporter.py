@@ -461,36 +461,34 @@ class JianyingExporter:
 
         if self.app_status != "edit":
             # print("警告: 当前不在编辑模式，无法切换到主页")
-            print("警告: 当前不在编辑模式，通过ESC回到编辑模型")
+            print("[切换到剪映主页] 当前不在编辑模式，尝试通过ESC回到编辑页")
             ControlFinder.send_esc_key()
             time.sleep(0.5)
             self.app_status = "edit"
 
         try:
-            close_btn = None
             title_bar_buttons = []
-
             # 遍历直接子控件，查找所有 ClassName 为 "TitleBarButton" 的 GroupControl
-            print("正在查找标题栏按钮...")
+            print("[切换到剪映主页] 正在查找标题栏关闭按钮...")
             for control in self.app.GetChildren():
                 if control.ClassName == "TitleBarButton" and control.ControlType == uia.ControlType.GroupControl:
                     title_bar_buttons.append(control)
                     # 打印找到的按钮信息，方便调试
-                    print(f"找到标题栏按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
+                    #print(f"[切换到剪映主页] 找到标题栏关闭按钮: Name={control.Name}, ClassName={control.ClassName}, Rect={control.BoundingRectangle}")
 
             if not title_bar_buttons:
-                print("错误: 未找到任何标题栏按钮。")
+                print("[切换到剪映主页] 错误: 未找到任何标题栏按钮")
                 return False
 
             # 找到最右侧的按钮（即通常的“X”关闭按钮）
             # 依据 BoundingRectangle.right 属性进行排序
             title_bar_buttons.sort(key=lambda c: c.BoundingRectangle.right, reverse=True)
             close_btn = title_bar_buttons[0]
-            print(f"定位到最右侧按钮作为关闭按钮: Name={close_btn.Name}, ClassName={close_btn.ClassName}, Rect={close_btn.BoundingRectangle}")
+            print(f"[切换到剪映主页] 定位到最右侧按钮作为关闭按钮: Name={close_btn.Name}, ClassName={close_btn.ClassName}, Rect={close_btn.BoundingRectangle}")
         
-            close_btn = self.app.GroupControl(
-                searchDepth=1, ClassName="TitleBarButton", foundIndex=3
-            )
+            # close_btn = self.app.GroupControl(
+            #     searchDepth=1, ClassName="TitleBarButton", foundIndex=3
+            # )
             if close_btn.Exists(1.0):
                 ControlFinder.retry_click(close_btn, delay=0.5)
                 return self.get_window()
