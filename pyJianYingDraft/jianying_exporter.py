@@ -216,7 +216,7 @@ class JianyingExporter:
             resolution: Optional[Export_resolution] = None,
             framerate: Optional[Export_framerate] = None,
             timeout: float = 60,
-    ) -> None:
+    ) -> bool:
         """导出指定的剪映草稿, **目前仅支持剪映6及以下版本**
 
         **注意: 需要确认有导出草稿的权限(不使用VIP功能或已开通VIP), 否则可能陷入死循环**
@@ -273,12 +273,13 @@ class JianyingExporter:
                 shutil.move(export_path, output_path)
             except Exception as e:
                 logger.info(f"移动文件失败: {e}")
-
             logger.info(f"导出 {draft_name} 至 {output_path} 完成")
+            return True
         except Exception as e:
             logger.error(f"导出失败: {e}", exc_info=True)
             # 重启剪映
             JianyingStarter.restart_jianying()
+        return False
 
     def export_draft_in_thread(
             self, draft_name: str, output_path: Optional[str] = None, timeout: float = 1200
@@ -286,10 +287,9 @@ class JianyingExporter:
         """在线程中导出指定的剪映草稿"""
         try:
             with uia.UIAutomationInitializerInThread(debug=True):
-                self.export_draft(
+                return self.export_draft(
                     draft_name=draft_name, output_path=output_path, timeout=timeout
                 )
-            return True
         except Exception as e:
             logger.error(f"在 export_draft_in_thread 中捕获到异常: {e}", exc_info=True)
             return False
@@ -338,9 +338,22 @@ class JianyingExporter:
                 searchDepth=2,
                 Compare=ControlFinder.desc_matcher("MainWindowTitleBarExportBtn"),
             )
-            return export_btn.Exists(0)
+            # 检查控件是否存在且可见
+            if not export_btn.Exists(0.5):  # 给0.5秒时间查找控件
+                return None
+            # 使用 IsVisible() 方法检查可见性（如果库支持）
+            if hasattr(export_btn, 'IsVisible') and not export_btn.IsVisible():
+                return None
+            # 使用 BoundingRectangle 检查控件是否有有效区域
+            rect = export_btn.BoundingRectangle
+            if rect.width() <= 0 or rect.height() <= 0:
+                return None
+            # 检查控件是否可点击
+            if hasattr(export_btn, 'IsEnabled') and not export_btn.IsEnabled:
+                return None
+            return export_btn
 
-        if not ControlFinder.wait_for_control(find_export_btn, timeout=3.0):
+        if not ControlFinder.wait_for_control(find_export_btn, timeout=8.0):
             logger.error(f"[find_export_btn] 未找到【导出】按钮")
             return False
 

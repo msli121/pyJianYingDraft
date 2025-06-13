@@ -566,8 +566,8 @@ class GoodStoryClipService:
                                        f"{story_id}_{get_current_datetime_str_()}.mp4")
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
         # 自动导出
-        export_success = GoodStoryClipService.jy_auto_export_video(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
-        if not export_success:
+        export_res = GoodStoryClipService.jy_auto_export_video(GOOD_STORY_CLIP_DRAFT_NAME, video_save_path)
+        if not export_res:
             raise Exception(f"导出好人好事故事成片失败：{video_save_path}")
         return video_save_path
 
@@ -601,6 +601,6 @@ class GoodStoryClipService:
         os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
         start_time = time.time()
         exporter = JianyingExporter()
-        export_success = exporter.export_draft_in_thread(jy_draft_name, video_save_path)
-        logging.info(f"导出完成 导出结果：{export_success}, 耗时：{time.time() - start_time:.2f}秒")
-        return export_success
+        export_res = exporter.export_draft_in_thread(jy_draft_name, video_save_path)
+        logging.info(f"导出完成 导出结果：{export_res}, 耗时：{time.time() - start_time:.2f}秒")
+        return export_res
