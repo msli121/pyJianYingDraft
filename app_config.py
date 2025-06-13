@@ -79,7 +79,8 @@ class AppConfig:
 
     # 剪映相关配置
     JY_DRAFT_DIR = os.getenv('JY_DRAFT_DIR', "D:\\Documents\\JianYingData\\JianyingPro Drafts")
-
+    # 剪映执行路径
+    JY_EXE_PATH = os.getenv('JY_EXE_PATH', "C:\\Users\\123\\AppData\\Local\\JianyingPro\\Apps\\JianyingPro.exe")
     # 微信通知API配置
     WECHAT_NOTIFICATION_API_URL = os.getenv('WECHAT_NOTIFICATION_API_URL')
 

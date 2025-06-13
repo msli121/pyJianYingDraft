@@ -256,20 +256,19 @@ def jy_auto_cut_and_export_one_step(task_id, house_no, video_script_url):
     os.makedirs(os.path.dirname(video_save_path), exist_ok=True)
     if not jy_auto_export_video(jy_draft_name, video_save_path):
         raise Exception("自动导出视频失败")
-    logging.info(f"[自动导出视频] 完成 视频地址={video_save_path}")
+    logging.info(f"[自动导出视频] 本地导出完成，本地视频地址={video_save_path}")
     # 视频上传OSS
     oss_path = video_save_path.replace(LOCAL_HOUSE_MATERIAL_DATA_DIR, OSS_VIDEO_MAKING_PUBLIC_PATH_PREFIX)
     # 替换oss_path中 \ 为 /
     oss_path = oss_path.replace("\\", "/")
-    logging.info(f"[视频上传OSS] {video_save_path} -> {oss_path}")
+    logging.info(f"[视频上传OSS] 开始上传OSS {video_save_path} -> {oss_path}")
     if not upload_local_file_to_oss(local_file_path=video_save_path, oss_file_path=oss_path):
-        raise Exception("成品视频上传OSS失败")
-    logging.info("[视频上传OSS] 完成")
+        raise Exception("成片视频上传OSS失败")
     # 拼接OSS地址
     url = generate_get_url(oss_path)
     if url:
         url = url.split("?")[0]
-    logging.info(f"url={url}")
+    logging.info(f"[视频上传OSS] 上传完成 url={url}")
     return url
 
 
