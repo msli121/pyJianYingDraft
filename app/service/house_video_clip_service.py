@@ -18,7 +18,7 @@ from app.enum.biz import BizPlatformTaskStatusEnum
 from app.utils.qywx_utils import send_qywx_message
 from app_config import AppConfig, BASE_DIR
 from pyJianYingDraft import trange, Clip_settings
-from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local
+from app.utils.common_utils import get_current_datetime_str_, download_by_url_to_local, get_current_datetime_str
 from app.utils.oss_utils import init_oss, upload_local_file_to_oss, \
     generate_get_url, process_url
 from pyJianYingDraft.jianying_exporter import JianyingExporter
@@ -286,14 +286,14 @@ def handle_auto_clip_house_video(data: dict) -> JyTaskOutputInfo:
         if not video_script_url:
             raise ValueError("缺少视频脚本地址")
         url = jy_auto_cut_and_export_one_step(task_id=task_id, house_no=house_no, video_script_url=video_script_url)
-        if notify_url:
-            message = (f"AI智能剪辑成功！\n"
-                       f"任务ID:{task_id}\n"
-                       f"房源编号: {house_no}\n"
-                       f"员工号:{staff_id}\n"
-                       f"昵称:{nickname}\n"
-                       f"视频URL: {url}")
-            send_qywx_message(message, url=notify_url)
+        # if notify_url:
+        #     message = (f"AI智能剪辑成功！\n"
+        #                f"任务ID:{task_id}\n"
+        #                f"房源编号: {house_no}\n"
+        #                f"员工号:{staff_id}\n"
+        #                f"昵称:{nickname}\n"
+        #                f"视频URL: {url}")
+        #     send_qywx_message(message, url=notify_url)
         output_info.success = True
         output_info.task_status = BizPlatformTaskStatusEnum.DoneSuccess.value
         output_info.task_message = BizPlatformTaskStatusEnum.DoneSuccess.desc
@@ -302,13 +302,14 @@ def handle_auto_clip_house_video(data: dict) -> JyTaskOutputInfo:
     except Exception as e:
         logger.error("[房源视频自动剪辑] Error: %s", str(e), exc_info=True)
         if notify_url:
-            message = (f"AI智能剪辑失败！\n"
+            message = (f"房源视频AI剪辑失败！\n"
+                       f"当前时间：{get_current_datetime_str()}\n"
                        f"任务ID:{task_id}\n"
                        f"房源编号: {house_no}\n"
                        f"员工号:{staff_id}\n"
                        f"昵称:{nickname}\n"
                        f"错误信息：{str(e)}\n")
-            send_qywx_message(message, url=notify_url)
+            send_qywx_message(url=notify_url, message=message, level='warning')
         output_info.success = False
         output_info.task_status = BizPlatformTaskStatusEnum.DoneFail.value
         output_info.task_message = str(e)
