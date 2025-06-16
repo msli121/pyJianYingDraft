@@ -19,3 +19,4 @@ pywin32
 pyautogui
 flask_cors
 pymysql
+psutil
