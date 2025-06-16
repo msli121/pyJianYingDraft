@@ -90,3 +90,8 @@ def print_json(data):
     # 使用 json.dumps 将对象格式化为 JSON 字符串
     json_str = json.dumps(data, ensure_ascii=False)
     print(json_str)
+
+if __name__ == '__main__':
+    auth_str = get_xingyun_auth()
+    print(auth_str)
+    print(check_auth_str())
