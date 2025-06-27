@@ -60,7 +60,6 @@ def execute_sql(sql, auth_str=None, db="ry-cloud"):
         "dataSource": db,
         "sql": sql
     }
-    # data_json = json.dumps(data, ensure_ascii=False)
 
     response = requests.post(url, headers=headers, json=data)
 

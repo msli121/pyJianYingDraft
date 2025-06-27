@@ -21,7 +21,6 @@ class TaskService:
         try:
             # 超时时间
             timeout_threshold = datetime.now() - timedelta(minutes=5)
-            task_infos = []
             if not AppConfig.SYNC_DATA_BY_API:
                 filters = {
                     "task_status": ("eq", BizPlatformTaskStatusEnum.Doing.value),
@@ -170,7 +169,7 @@ class TaskService:
             )
         else:
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            sql = f"UPDATE biz_platform_jy_task SET task_status = {BizPlatformTaskStatusEnum.Doing.value}, start_time = '{now_str}', end_time=null WHERE id = {task_id}"
+            sql = f"UPDATE biz_platform_jy_task SET task_status = '{BizPlatformTaskStatusEnum.Doing.value}', start_time = '{now_str}', end_time=null WHERE id = {task_id}"
             sql_res = sql_utils.execute_sql(sql)
             logger.info(f"标记任务为执行中状态 sql_res:{sql_res}")
 
