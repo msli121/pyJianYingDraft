@@ -1,4 +1,4 @@
-"""剪映自动化控制，主要与自动导出有关"""
+"""剪映自动化剪辑、导出、支持导出异常检测、自动重启剪映"""
 
 import os
 import random
@@ -17,9 +17,8 @@ from app_config import AppConfig
 logger = logging.getLogger(__name__)
 
 
-class Export_resolution(Enum):
+class ExportResolution(Enum):
     """导出分辨率"""
-
     RES_8K = "8K"
     RES_4K = "4K"
     RES_2K = "2K"
@@ -28,9 +27,8 @@ class Export_resolution(Enum):
     RES_480P = "480P"
 
 
-class Export_framerate(Enum):
+class ExportFramerate(Enum):
     """导出帧率"""
-
     FR_24 = "24fps"
     FR_25 = "25fps"
     FR_30 = "30fps"
@@ -213,8 +211,8 @@ class JianyingExporter:
             draft_name: str,
             output_path: Optional[str] = None,
             *,
-            resolution: Optional[Export_resolution] = None,
-            framerate: Optional[Export_framerate] = None,
+            resolution: Optional[ExportResolution] = None,
+            framerate: Optional[ExportFramerate] = None,
             timeout: float = 60,
     ) -> bool:
         """导出指定的剪映草稿, **目前仅支持剪映6及以下版本**
@@ -415,8 +413,8 @@ class JianyingExporter:
 
     def _set_export_settings(
             self,
-            resolution: Optional[Export_resolution],
-            framerate: Optional[Export_framerate],
+            resolution: Optional[ExportResolution],
+            framerate: Optional[ExportFramerate],
     ) -> None:
         """设置导出参数"""
 
@@ -445,7 +443,7 @@ class JianyingExporter:
             self._set_framerate(setting_group, framerate)
 
     def _set_resolution(
-            self, setting_group: uia.Control, resolution: Export_resolution
+            self, setting_group: uia.Control, resolution: ExportResolution
     ) -> None:
         """设置分辨率"""
         try:
@@ -474,7 +472,7 @@ class JianyingExporter:
             logger.error(f"设置分辨率失败: {e}", exc_info=True)
 
     def _set_framerate(
-            self, setting_group: uia.Control, framerate: Export_framerate
+            self, setting_group: uia.Control, framerate: ExportFramerate
     ) -> None:
         """设置帧率"""
         try:
